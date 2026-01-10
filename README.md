@@ -4,24 +4,13 @@
 
 <img height="120" src="https://github.com/lainbo/ai-commit/blob/main/images/logo.png?raw=true">
 
-<h1>AI Commit</h1>
+<h1>Nota AI Commit</h1>
 
 Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.
 
 **English** · [简体中文](./README.zh_CN.md) · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
 
 <!-- SHIELD GROUP -->
-
-[![][github-contributors-shield]][github-contributors-link]
-[![][github-forks-shield]][github-forks-link]
-[![][github-stars-shield]][github-stars-link]
-[![][github-issues-shield]][github-issues-link]
-[![][vscode-marketplace-shield]][vscode-marketplace-link]
-[![][total-installs-shield]][total-installs-link]
-[![][avarage-rating-shield]][avarage-rating-link]
-[![][github-license-shield]][github-license-link]
-
-![](https://github.com/sitoi/ai-commit/blob/main/aicommit.gif?raw=true)
 
 </div>
 
@@ -85,39 +74,6 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 | GEMINI_TEMPERATURE | number |         0.7          |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative |
 | AI_COMMIT_LANGUAGE | string |          en          |   Yes    |                                               Supports 19 languages                                                |
 | SYSTEM_PROMPT      | string |         None         |    No    |                                                Custom system prompt                                                |
-
-## ⌨️ Local Development
-
-You can use Github Codespaces for online development:
-
-[![][github-codespace-shield]][github-codespace-link]
-
-Alternatively, you can clone the repository and run the following commands for local development:
-
-```bash
-$ git clone https://github.com/sitoi/ai-commit.git
-$ cd ai-commit
-$ npm install
-```
-
-Open the project folder in VSCode. Press F5 to run the project. This will open a new Extension Development Host window and launch the plugin within it.
-
-## 🤝 Contributing
-
-Contributions of all types are more than welcome, if you are interested in contributing code, feel free to check out our GitHub [Issues][github-issues-link] to get stuck in to show us what you’re made of.
-
-[![][pr-welcome-shield]][pr-welcome-link]
-
-### 💗 All Thanks To Our Contributors
-
-[![][github-contrib-shield]][github-contrib-link]
-
-## 🔗 Links
-
-### Credits
-
-- **auto-commit** - <https://github.com/lynxife/auto-commit>
-- **opencommit** - <https://github.com/di-sukharev/opencommit>
 
 ---
 

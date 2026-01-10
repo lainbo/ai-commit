@@ -1,8 +1,8 @@
 {
-  "name": "ai-commit",
-  "displayName": "AI Commit",
+  "name": "nota-ai-commit-lainbo",
+  "displayName": "Nota AI Commit",
   "description": "Use Azure/OpenAI/Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "engines": {
     "node": ">=16",
     "vscode": "^1.77.0"
