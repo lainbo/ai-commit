@@ -8,7 +8,7 @@
 
 Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.
 
-**English** · [简体中文](./README.zh_CN.md) · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
+**English** · [简体中文](./README.zh_CN.md) · [Marketplace][vscode-marketplace-link] · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
 
 <!-- SHIELD GROUP -->
 
@@ -19,6 +19,8 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 This repository is a fork of `sitoi/ai-commit`:
 
 - Upstream: https://github.com/sitoi/ai-commit
+- GitHub: https://github.com/lainbo/ai-commit
+- Marketplace: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
 - Purpose: personal tweaks and republishing under my own VS Code publisher
 - Changes in this fork:
   - Allow generating commit messages even when there are no staged changes (default behavior: prefer staged diff, fallback to unstaged diff)
@@ -35,19 +37,19 @@ This repository is a fork of `sitoi/ai-commit`:
 
 ## 📦 Installation
 
-1. Search for "AI Commit" in VSCode and click the "Install" button.
-2. Install it directly from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit).
+1. Search for "Nota AI Commit" in VSCode and click the "Install" button.
+2. Install it directly from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo).
 
 > **Note**\
 > Make sure your node version >= 16
 
 ## 🤯 Usage
 
-1. Ensure that you have installed and enabled the "AI Commit" extension.
-2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed.
+1. Ensure that you have installed and enabled the "Nota AI Commit" extension.
+2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed (grouped as: General / OpenAI / Gemini).
 3. Make changes in your project (staged or unstaged).
-4. (Optional) If you want to provide additional context for the commit message, type it in the Source Control panel's message input box before clicking the AI Commit button.
-5. Next to the commit message input box in the "Source Control" panel, click the "AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
+4. (Optional) If you want to provide additional context for the commit message, type it in the Source Control panel's message input box before clicking the Nota AI Commit button.
+5. Next to the commit message input box in the "Source Control" panel, click the "Nota AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
 6. Review the generated commit message, and if you are satisfied, proceed to commit your changes.
 
 > **Note**\
@@ -55,7 +57,7 @@ This repository is a fork of `sitoi/ai-commit`:
 
 ### ⚙️ Configuration
 
-> **Note** Version >= 0.0.5 Don't need to configure `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC`, Default Prompt is [prompt/with_gitmoji.md](./prompt/with_gitmoji.md), If don't need to use `Gitmoji`. Please set `SYSTEM_PROMPT` to your custom prompt, please refer to [prompt/without_gitmoji.md](./prompt/without_gitmoji.md).
+> **Note** Version >= 0.0.5 Don't need to configure `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC`, Default Prompt is [prompt/with_gitmoji.md](https://github.com/lainbo/ai-commit/blob/main/prompt/with_gitmoji.md), If don't need to use `Gitmoji`. Please set `SYSTEM_PROMPT` to your custom prompt, please refer to [prompt/without_gitmoji.md](https://github.com/lainbo/ai-commit/blob/main/prompt/without_gitmoji.md).
 
 In the VSCode settings, locate the "ai-commit" configuration options and configure them as needed:
 
@@ -83,25 +85,25 @@ This project is [MIT](./LICENSE) licensed.
 
 <!-- LINK GROUP -->
 
-[github-codespace-link]: https://codespaces.new/sitoi/ai-commit
-[github-codespace-shield]: https://github.com/sitoi/ai-commit/blob/main/images/codespaces.png?raw=true
-[github-contributors-link]: https://github.com/sitoi/ai-commit/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/sitoi/ai-commit?color=c4f042&labelColor=black&style=flat-square
-[github-forks-link]: https://github.com/sitoi/ai-commit/network/members
-[github-forks-shield]: https://img.shields.io/github/forks/sitoi/ai-commit?color=8ae8ff&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/sitoi/ai-commit/issues
-[github-issues-shield]: https://img.shields.io/github/issues/sitoi/ai-commit?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/sitoi/ai-commit/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/github/license/sitoi/ai-commit?color=white&labelColor=black&style=flat-square
-[github-stars-link]: https://github.com/sitoi/ai-commit/network/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/sitoi/ai-commit?color=ffcb47&labelColor=black&style=flat-square
-[pr-welcome-link]: https://github.com/sitoi/ai-commit/pulls
+[github-codespace-link]: https://codespaces.new/lainbo/ai-commit
+[github-codespace-shield]: https://github.com/lainbo/ai-commit/blob/main/images/codespaces.png?raw=true
+[github-contributors-link]: https://github.com/lainbo/ai-commit/graphs/contributors
+[github-contributors-shield]: https://img.shields.io/github/contributors/lainbo/ai-commit?color=c4f042&labelColor=black&style=flat-square
+[github-forks-link]: https://github.com/lainbo/ai-commit/network/members
+[github-forks-shield]: https://img.shields.io/github/forks/lainbo/ai-commit?color=8ae8ff&labelColor=black&style=flat-square
+[github-issues-link]: https://github.com/lainbo/ai-commit/issues
+[github-issues-shield]: https://img.shields.io/github/issues/lainbo/ai-commit?color=ff80eb&labelColor=black&style=flat-square
+[github-license-link]: https://github.com/lainbo/ai-commit/blob/main/LICENSE
+[github-license-shield]: https://img.shields.io/github/license/lainbo/ai-commit?color=white&labelColor=black&style=flat-square
+[github-stars-link]: https://github.com/lainbo/ai-commit/network/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/lainbo/ai-commit?color=ffcb47&labelColor=black&style=flat-square
+[pr-welcome-link]: https://github.com/lainbo/ai-commit/pulls
 [pr-welcome-shield]: https://img.shields.io/badge/🤯_pr_welcome-%E2%86%92-ffcb47?labelColor=black&style=for-the-badge
-[github-contrib-link]: https://github.com/sitoi/ai-commit/graphs/contributors
-[github-contrib-shield]: https://contrib.rocks/image?repo=sitoi%2Fai-commit
-[vscode-marketplace-link]: https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit
-[vscode-marketplace-shield]: https://img.shields.io/vscode-marketplace/v/Sitoi.ai-commit.svg?label=vscode%20marketplace&color=blue&labelColor=black&style=flat-square
-[total-installs-link]: https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit
-[total-installs-shield]: https://img.shields.io/vscode-marketplace/d/Sitoi.ai-commit.svg?&color=greeen&labelColor=black&style=flat-square
-[avarage-rating-link]: https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit
-[avarage-rating-shield]: https://img.shields.io/vscode-marketplace/r/Sitoi.ai-commit.svg?&color=green&labelColor=black&style=flat-square
+[github-contrib-link]: https://github.com/lainbo/ai-commit/graphs/contributors
+[github-contrib-shield]: https://contrib.rocks/image?repo=lainbo%2Fai-commit
+[vscode-marketplace-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
+[vscode-marketplace-shield]: https://img.shields.io/vscode-marketplace/v/lainbo.nota-ai-commit-lainbo.svg?label=vscode%20marketplace&color=blue&labelColor=black&style=flat-square
+[total-installs-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
+[total-installs-shield]: https://img.shields.io/vscode-marketplace/d/lainbo.nota-ai-commit-lainbo.svg?&color=greeen&labelColor=black&style=flat-square
+[avarage-rating-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
+[avarage-rating-shield]: https://img.shields.io/vscode-marketplace/r/lainbo.nota-ai-commit-lainbo.svg?&color=green&labelColor=black&style=flat-square
