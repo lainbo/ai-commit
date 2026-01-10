@@ -1,8 +1,8 @@
 {
   "name": "ai-commit",
   "displayName": "AI Commit",
-  "description": "Use Azure/OpenAI API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
-  "version": "0.1.1",
+  "description": "Use Azure/OpenAI/Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
+  "version": "0.1.2",
   "engines": {
     "node": ">=16",
     "vscode": "^1.77.0"
@@ -14,6 +14,7 @@
     "Azure",
     "OpenAI",
     "ChatGPT",
+    "Gemini",
     "GitEmoji",
     "Git Commit",
     "Conventional Commits",
@@ -23,137 +24,163 @@
     "AI Commit",
     "Auto Commit"
   ],
-  "publisher": "sitoi",
-  "repository": "https://github.com/sitoi/ai-commit",
+  "publisher": "lainbo",
+  "repository": "https://github.com/lainbo/ai-commit",
   "icon": "images/logo.png",
   "activationEvents": [
-    "onCommand:ai-commit"
+    "onCommand:extension.ai-commit",
+    "onCommand:ai-commit.showAvailableModels"
   ],
   "contributes": {
     "commands": [
       {
         "command": "extension.ai-commit",
-        "icon": {
-          "dark": "images/icon.svg",
-          "light": "images/icon.svg"
-        },
-        "title": "AI Commit"
+        "icon": "$(sparkle)",
+        "title": "%aiCommit.command.aiCommit.title%"
       },
       {
         "command": "ai-commit.showAvailableModels",
-        "title": "Show Available OpenAI Models"
+        "title": "%aiCommit.command.showAvailableModels.title%"
       }
     ],
-    "configuration": {
-      "properties": {
-        "ai-commit.AI_COMMIT_LANGUAGE": {
-          "default": "English",
-          "description": "Commit message language",
-          "enum": [
-            "Simplified Chinese",
-            "Traditional Chinese",
-            "Japanese",
-            "Korean",
-            "Czech",
-            "German",
-            "French",
-            "Italian",
-            "Dutch",
-            "Portuguese",
-            "Vietnamese",
-            "English",
-            "Spanish",
-            "Swedish",
-            "Russian",
-            "Bahasa",
-            "Polish",
-            "Turkish",
-            "Thai"
-          ],
-          "enumDescriptions": [
-            "简体中文",
-            "繁體中文",
-            "にほんご",
-            "한국어",
-            "česky",
-            "Deutsch",
-            "française",
-            "italiano",
-            "Nederlands",
-            "português",
-            "tiếng Việt",
-            "english",
-            "español",
-            "Svenska",
-            "русский",
-            "bahasa",
-            "Polski",
-            "Turkish",
-            "ไทย"
-          ],
-          "type": "string"
-        },
-        "ai-commit.AZURE_API_VERSION": {
-          "default": "",
-          "description": "AZURE API VERSION",
-          "type": "string"
-        },
-        "ai-commit.OPENAI_API_KEY": {
-          "default": "",
-          "description": "OpenAI API Key",
-          "type": "string"
-        },
-        "ai-commit.OPENAI_BASE_URL": {
-          "default": "",
-          "description": "OpenAI BASE URL",
-          "type": "string"
-        },
-        "ai-commit.OPENAI_MODEL": {
-          "default": "gpt-4o",
-          "description": "OpenAI MODEL, you can select a model from the list by running the 'Show Available OpenAI Models' command",
-          "type": "string"
-        },
-        "ai-commit.AI_COMMIT_SYSTEM_PROMPT": {
-          "type": "string",
-          "default": "",
-          "description": "Custom system prompt for generating commit messages"
-        },
-        "ai-commit.OPENAI_TEMPERATURE": {
-          "type": "number",
-          "default": 0.7,
-          "minimum": 0,
-          "maximum": 2,
-          "description": "OpenAI temperature setting (0-2). Higher values make output more random, lower values more deterministic."
-        },
-        "ai-commit.AI_PROVIDER": {
-          "type": "string",
-          "default": "openai",
-          "description": "AI Provider to use (OpenAI or Gemini)",
-          "enum": [
-            "openai",
-            "gemini"
-          ]
-        },
-        "ai-commit.GEMINI_API_KEY": {
-          "type": "string",
-          "default": "",
-          "description": "Gemini API Key"
-        },
-        "ai-commit.GEMINI_MODEL": {
-          "type": "string",
-          "default": "gemini-2.0-flash-001",
-          "description": "Gemini Model to use"
-        },
-        "ai-commit.GEMINI_TEMPERATURE": {
-          "type": "number",
-          "default": 0.7,
-          "minimum": 0,
-          "maximum": 2,
-          "description": "Gemini temperature setting (0-2). Controls randomness."
+    "configuration": [
+      {
+        "title": "%aiCommit.configuration.general.title%",
+        "properties": {
+          "ai-commit.AI_PROVIDER": {
+            "type": "string",
+            "default": "openai",
+            "description": "%aiCommit.config.aiProvider.description%",
+            "enum": [
+              "openai",
+              "gemini"
+            ]
+          },
+          "ai-commit.DIFF_SOURCE": {
+            "type": "string",
+            "default": "auto",
+            "enum": [
+              "auto",
+              "staged",
+              "unstaged",
+              "staged+unstaged"
+            ],
+            "description": "%aiCommit.config.diffSource.description%"
+          },
+          "ai-commit.AI_COMMIT_LANGUAGE": {
+            "default": "English",
+            "description": "%aiCommit.config.commitLanguage.description%",
+            "enum": [
+              "Simplified Chinese",
+              "Traditional Chinese",
+              "Japanese",
+              "Korean",
+              "Czech",
+              "German",
+              "French",
+              "Italian",
+              "Dutch",
+              "Portuguese",
+              "Vietnamese",
+              "English",
+              "Spanish",
+              "Swedish",
+              "Russian",
+              "Bahasa",
+              "Polish",
+              "Turkish",
+              "Thai"
+            ],
+            "enumDescriptions": [
+              "简体中文",
+              "繁體中文",
+              "にほんご",
+              "한국어",
+              "česky",
+              "Deutsch",
+              "française",
+              "italiano",
+              "Nederlands",
+              "português",
+              "tiếng Việt",
+              "english",
+              "español",
+              "Svenska",
+              "русский",
+              "bahasa",
+              "Polski",
+              "Turkish",
+              "ไทย"
+            ],
+            "type": "string"
+          },
+          "ai-commit.AI_COMMIT_SYSTEM_PROMPT": {
+            "type": "string",
+            "default": "",
+            "description": "%aiCommit.config.systemPrompt.description%"
+          }
         }
       },
-      "title": "AI Commit"
-    },
+      {
+        "title": "%aiCommit.configuration.openai.title%",
+        "properties": {
+          "ai-commit.OPENAI_API_KEY": {
+            "default": "",
+            "description": "%aiCommit.config.openaiApiKey.description%",
+            "type": "string"
+          },
+          "ai-commit.OPENAI_BASE_URL": {
+            "default": "",
+            "description": "%aiCommit.config.openaiBaseUrl.description%",
+            "type": "string"
+          },
+          "ai-commit.AZURE_API_VERSION": {
+            "default": "",
+            "description": "%aiCommit.config.azureApiVersion.description%",
+            "type": "string"
+          },
+          "ai-commit.OPENAI_MODEL": {
+            "default": "gpt-4o",
+            "description": "%aiCommit.config.openaiModel.description%",
+            "type": "string"
+          },
+          "ai-commit.OPENAI_TEMPERATURE": {
+            "type": "number",
+            "default": 0.7,
+            "minimum": 0,
+            "maximum": 2,
+            "description": "%aiCommit.config.openaiTemperature.description%"
+          }
+        }
+      },
+      {
+        "title": "%aiCommit.configuration.gemini.title%",
+        "properties": {
+          "ai-commit.GEMINI_API_KEY": {
+            "type": "string",
+            "default": "",
+            "description": "%aiCommit.config.geminiApiKey.description%"
+          },
+          "ai-commit.GEMINI_BASE_URL": {
+            "type": "string",
+            "default": "",
+            "description": "%aiCommit.config.geminiBaseUrl.description%"
+          },
+          "ai-commit.GEMINI_MODEL": {
+            "type": "string",
+            "default": "gemini-2.0-flash-001",
+            "description": "%aiCommit.config.geminiModel.description%"
+          },
+          "ai-commit.GEMINI_TEMPERATURE": {
+            "type": "number",
+            "default": 0.7,
+            "minimum": 0,
+            "maximum": 2,
+            "description": "%aiCommit.config.geminiTemperature.description%"
+          }
+        }
+      }
+    ],
     "menus": {
       "scm/title": [
         {

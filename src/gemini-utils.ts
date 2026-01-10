@@ -43,8 +43,10 @@ export async function GeminiAPI(messages: any[]) {
     const configManager = ConfigurationManager.getInstance();
     const modelName = configManager.getConfig<string>(ConfigKeys.GEMINI_MODEL);
     const temperature = configManager.getConfig<number>(ConfigKeys.GEMINI_TEMPERATURE, 0.7);
+    const baseUrl = configManager.getConfig<string>(ConfigKeys.GEMINI_BASE_URL);
 
-    const model = gemini.getGenerativeModel({ model: modelName });
+    const requestOptions = baseUrl && baseUrl.trim() ? { baseUrl: baseUrl.trim() } : undefined;
+    const model = gemini.getGenerativeModel({ model: modelName }, requestOptions);
     const chat = model.startChat({
       generationConfig: {
         temperature: temperature,

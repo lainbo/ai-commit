@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img height="120" src="https://github.com/Sitoi/ai-commit/blob/main/images/logo.png?raw=true">
+<img height="120" src="https://github.com/lainbo/ai-commit/blob/main/images/logo.png?raw=true">
 
 <h1>AI Commit</h1>
 
@@ -25,6 +25,17 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 
 </div>
 
+## 🍴 Fork Notice
+
+This repository is a fork of `sitoi/ai-commit`:
+
+- Upstream: https://github.com/sitoi/ai-commit
+- Purpose: personal tweaks and republishing under my own VS Code publisher
+- Changes in this fork:
+  - Allow generating commit messages even when there are no staged changes (default behavior: prefer staged diff, fallback to unstaged diff)
+  - Add `ai-commit.DIFF_SOURCE` setting to control which git changes are used (`auto` / `staged` / `unstaged` / `staged+unstaged`)
+  - Supports Custom Endpoint URLs for Gemini
+
 ## ✨ Features
 
 - 🤯 Support generating commit messages based on git diffs using ChatGPT / Azure API / DeepSeek / Gemini API.
@@ -45,7 +56,7 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 
 1. Ensure that you have installed and enabled the "AI Commit" extension.
 2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed.
-3. Make changes in your project and add the changes to the staging area (git add).
+3. Make changes in your project (staged or unstaged).
 4. (Optional) If you want to provide additional context for the commit message, type it in the Source Control panel's message input box before clicking the AI Commit button.
 5. Next to the commit message input box in the "Source Control" panel, click the "AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
 6. Review the generated commit message, and if you are satisfied, proceed to commit your changes.
@@ -61,6 +72,7 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 
 | Configuration      |  Type  |       Default        | Required |                                                       Notes                                                        |
 | :----------------- | :----: | :------------------: | :------: | :----------------------------------------------------------------------------------------------------------------: |
+| DIFF_SOURCE        | string |         auto         |    No    |      Which changes to use: `auto` (prefer staged), `staged`, `unstaged`, `staged+unstaged` (adds separators).      |
 | AI_PROVIDER        | string |        openai        |   Yes    |                                     Select AI Provider: `openai` or `gemini`.                                      |
 | OPENAI_API_KEY     | string |         None         |   Yes    |    Required when `AI Provider` is set to `OpenAI`. [OpenAI token](https://platform.openai.com/account/api-keys)    |
 | OPENAI_BASE_URL    | string |         None         |    No    |                If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                 |
@@ -68,6 +80,7 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 | AZURE_API_VERSION  | string |         None         |    No    |                                                 AZURE_API_VERSION                                                  |
 | OPENAI_TEMPERATURE | number |         0.7          |    No    |      Controls randomness in the output. Range: 0-2. Lower values: more focused, Higher values: more creative       |
 | GEMINI_API_KEY     | string |         None         |   Yes    |     Required when `AI Provider` is set to `Gemini`. [Gemini API key](https://makersuite.google.com/app/apikey)     |
+| GEMINI_BASE_URL    | string |         None         |    No    |         Gemini Base URL (optional). Use a third-party provider endpoint if needed; otherwise leave empty.          |
 | GEMINI_MODEL       | string | gemini-2.0-flash-001 |   Yes    |                       Gemini MODEL. Currently, model selection is limited to configuration.                        |
 | GEMINI_TEMPERATURE | number |         0.7          |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative |
 | AI_COMMIT_LANGUAGE | string |          en          |   Yes    |                                               Supports 19 languages                                                |

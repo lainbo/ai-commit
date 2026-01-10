@@ -1,0 +1,20 @@
+{
+  "aiCommit.configuration.general.title": "AI Commit: General",
+  "aiCommit.configuration.openai.title": "AI Commit: OpenAI",
+  "aiCommit.configuration.gemini.title": "AI Commit: Gemini",
+  "aiCommit.command.aiCommit.title": "AI Commit",
+  "aiCommit.command.showAvailableModels.title": "Show Available OpenAI Models",
+  "aiCommit.config.diffSource.description": "Which git changes to use for generation: auto (prefer staged, fallback to unstaged), staged, unstaged, or staged+unstaged.",
+  "aiCommit.config.commitLanguage.description": "Commit message language",
+  "aiCommit.config.azureApiVersion.description": "AZURE API VERSION",
+  "aiCommit.config.openaiApiKey.description": "OpenAI API Key",
+  "aiCommit.config.openaiBaseUrl.description": "OpenAI BASE URL",
+  "aiCommit.config.openaiModel.description": "OpenAI MODEL, you can select a model from the list by running the 'Show Available OpenAI Models' command",
+  "aiCommit.config.systemPrompt.description": "Custom system prompt for generating commit messages",
+  "aiCommit.config.openaiTemperature.description": "OpenAI temperature setting (0-2). Higher values make output more random, lower values more deterministic.",
+  "aiCommit.config.aiProvider.description": "AI Provider to use (OpenAI or Gemini)",
+  "aiCommit.config.geminiApiKey.description": "Gemini API Key",
+  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL (optional). Defaults to the official endpoint when empty.",
+  "aiCommit.config.geminiModel.description": "Gemini Model to use",
+  "aiCommit.config.geminiTemperature.description": "Gemini temperature setting (0-2). Controls randomness."
+}

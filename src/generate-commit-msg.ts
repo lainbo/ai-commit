@@ -2,11 +2,13 @@ import * as fs from 'fs-extra';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager } from './config';
-import { getDiffStaged } from './git-utils';
+import { getDiffStaged, getDiffUnstaged } from './git-utils';
 import { ChatGPTAPI } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
 import { GeminiAPI } from './gemini-utils';
+
+type DiffSource = 'auto' | 'staged' | 'unstaged' | 'staged+unstaged';
 
 /**
  * Generates a chat completion prompt for the commit message based on the provided diff.
@@ -74,16 +76,54 @@ export async function generateCommitMsg(arg) {
       const repo = await getRepo(arg);
 
       const aiProvider = configManager.getConfig<string>(ConfigKeys.AI_PROVIDER, 'openai');
+      const diffSource = configManager.getConfig<DiffSource>(ConfigKeys.DIFF_SOURCE, 'auto');
 
-      progress.report({ message: 'Getting staged changes...' });
-      const { diff, error } = await getDiffStaged(repo);
+      progress.report({ message: 'Getting git changes...' });
+      const [stagedResult, unstagedResult] = await Promise.all([
+        getDiffStaged(repo),
+        getDiffUnstaged(repo)
+      ]);
 
-      if (error) {
-        throw new Error(`Failed to get staged changes: ${error}`);
+      if (stagedResult.error) {
+        throw new Error(`Failed to get staged changes: ${stagedResult.error}`);
       }
 
-      if (!diff || diff === 'No changes staged.') {
-        throw new Error('No changes staged for commit');
+      if (unstagedResult.error) {
+        throw new Error(`Failed to get unstaged changes: ${unstagedResult.error}`);
+      }
+
+      const stagedDiff = stagedResult.diff.trim();
+      const unstagedDiff = unstagedResult.diff.trim();
+
+      let selectedDiff = '';
+      switch (diffSource) {
+        case 'staged':
+          selectedDiff = stagedDiff;
+          break;
+        case 'unstaged':
+          selectedDiff = unstagedDiff;
+          break;
+        case 'staged+unstaged':
+          selectedDiff = [stagedDiff ? `--- STAGED ---\n${stagedDiff}` : '', unstagedDiff ? `--- UNSTAGED ---\n${unstagedDiff}` : '']
+            .filter(Boolean)
+            .join('\n\n');
+          break;
+        case 'auto':
+        default:
+          selectedDiff = stagedDiff || unstagedDiff;
+          break;
+      }
+
+      if (!selectedDiff) {
+        if (diffSource === 'staged') {
+          throw new Error(
+            "No staged changes found. Stage your changes (git add) or set 'ai-commit.DIFF_SOURCE' to 'unstaged'/'auto'."
+          );
+        }
+        if (diffSource === 'unstaged') {
+          throw new Error("No unstaged changes found. Modify files or set 'ai-commit.DIFF_SOURCE' to 'staged'/'auto'.");
+        }
+        throw new Error('No git changes found to generate a commit message');
       }
 
       const scmInputBox = repo.inputBox;
@@ -99,7 +139,7 @@ export async function generateCommitMsg(arg) {
           : 'Analyzing changes...'
       });
       const messages = await generateCommitMessageChatCompletionPrompt(
-        diff,
+        selectedDiff,
         additionalContext
       );
 

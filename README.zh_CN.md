@@ -25,6 +25,17 @@
 
 </div>
 
+## 🍴 Fork 说明
+
+本仓库 Fork 自 `sitoi/ai-commit`：
+
+- 上游仓库：https://github.com/sitoi/ai-commit
+- Fork 目的：基于个人使用习惯做小调整
+- 本 Fork 的主要改动：
+  - 不需要先 `git add` 暂存，也可以生成提交信息（默认优先读取暂存区 diff；如果暂存区为空则自动读取未暂存 diff）
+  - 新增配置 `ai-commit.DIFF_SOURCE` 用于控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
+  - 支持 Gemini 自定义端点URL
+
 ## ✨ 特性
 
 - 🤯 支持使用 OpenAI / Azure OpenAI / DeepSeek / Gemini API 根据 git diffs 自动生成提交信息
@@ -45,7 +56,7 @@
 
 1. 确保您已经安装并启用了 `AI Commit` 扩展。
 2. 在 `VSCode` 设置中，找到 "ai-commit" 配置项，并根据需要进行配置：
-3. 在项目中进行更改并将更改添加到暂存区 (git add)。
+3. 在项目中进行更改（可暂存也可不暂存）。
 4. (可选) 如果您想为提交消息提供额外的上下文，请在点击 AI Commit 按钮之前，在源代码管理面板的消息输入框中输入上下文。
 5. 在 `Source Control` 面板的提交消息输入框旁边，单击 `AI Commit` 图标按钮。点击后，扩展将生成 Commit 信息（如果提供了额外上下文，将会考虑在内）并填充到输入框中。
 6. 审核生成的 Commit 信息，如果满意，请提交更改。
@@ -59,19 +70,21 @@
 
 在 `VSCode` 设置中，找到 "ai-commit" 配置项，并根据需要进行配置
 
-| 配置               |  类型  |         默认         | 必要 |                                              备注                                               |
-| :----------------- | :----: | :------------------: | :--: | :---------------------------------------------------------------------------------------------: |
-| AI_PROVIDER        | string |        openai        | Yes  |                            Select AI Provider: `openai` or `gemini`.                            |
-| OPENAI_API_KEY     | string |         None         |  是  |                   [OpenAI 令牌](https://platform.openai.com/account/api-keys)                   |
-| OPENAI_BASE_URL    | string |         None         |  否  |       如果是 Azure，使用：https://{resource}.openai.azure.com/openai/deployments/{model}        |
-| OPENAI_MODEL       | string |        gpt-4o        |  是  |     OpenAI MODEL, 你可以通过运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。      |
-| AZURE_API_VERSION  | string |         None         |  否  |                                        AZURE_API_VERSION                                        |
-| OPENAI_TEMPERATURE | number |         0.7          |  否  |              控制输出的随机性。范围：0-2。较低的值：更加集中，较高的值：更有创造性              |
-| GEMINI_API_KEY     | string |         None         | Yes  | 将`AI Provider`设置为`Gemini`时需要。[Gemini API key](https://makersuite.google.com/app/apikey) |
-| GEMINI_MODEL       | string | gemini-2.0-flash-001 | Yes  |                               模型选择仅限于配 Gemini 模型。置。                                |
-| GEMINI_TEMPERATURE | number |         0.7          |  No  |          `Gemini` 控制输出的随机性。范围：0-2。较低的值：更加集中，较高的值：更有创造           |
-| AI_COMMIT_LANGUAGE | string |          en          |  是  |                                         支持 19 种语言                                          |
-| SYSTEM_PROMPT      | string |         None         |  否  |                                        自定义系统提示词                                         |
+| 配置               |  类型  |         默认         | 必要  |                                              备注                                               |
+| :----------------- | :----: | :------------------: | :---: | :---------------------------------------------------------------------------------------------: |
+| DIFF_SOURCE        | string |         auto         |  否   |  使用哪些改动生成：`auto`（优先暂存）、`staged`、`unstaged`、`staged+unstaged`（会加分隔符）。  |
+| AI_PROVIDER        | string |        openai        |  Yes  |                            Select AI Provider: `openai` or `gemini`.                            |
+| OPENAI_API_KEY     | string |         None         |  是   |                   [OpenAI 令牌](https://platform.openai.com/account/api-keys)                   |
+| OPENAI_BASE_URL    | string |         None         |  否   |       如果是 Azure，使用：https://{resource}.openai.azure.com/openai/deployments/{model}        |
+| OPENAI_MODEL       | string |        gpt-4o        |  是   |     OpenAI MODEL, 你可以通过运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。      |
+| AZURE_API_VERSION  | string |         None         |  否   |                                        AZURE_API_VERSION                                        |
+| OPENAI_TEMPERATURE | number |         0.7          |  否   |              控制输出的随机性。范围：0-2。较低的值：更加集中，较高的值：更有创造性              |
+| GEMINI_API_KEY     | string |         None         |  Yes  | 将`AI Provider`设置为`Gemini`时需要。[Gemini API key](https://makersuite.google.com/app/apikey) |
+| GEMINI_BASE_URL    | string |         None         |  否   |    Gemini Base URL（可选）。如使用第三方供应商，请填其 endpoint；否则留空使用官方接口地址。     |
+| GEMINI_MODEL       | string | gemini-2.0-flash-001 |  Yes  |                               模型选择仅限于配 Gemini 模型。置。                                |
+| GEMINI_TEMPERATURE | number |         0.7          |  No   |          `Gemini` 控制输出的随机性。范围：0-2。较低的值：更加集中，较高的值：更有创造           |
+| AI_COMMIT_LANGUAGE | string |          en          |  是   |                                         支持 19 种语言                                          |
+| SYSTEM_PROMPT      | string |         None         |  否   |                                        自定义系统提示词                                         |
 
 ## ⌨️ 本地开发
 
