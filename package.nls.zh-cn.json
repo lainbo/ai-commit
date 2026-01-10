@@ -1,7 +1,7 @@
 {
-  "aiCommit.configuration.general.title": "AI Commit：插件设置",
-  "aiCommit.configuration.openai.title": "AI Commit：OpenAI 设置",
-  "aiCommit.configuration.gemini.title": "AI Commit：Gemini 设置",
+  "aiCommit.configuration.general.title": "Nota AI Commit：插件设置",
+  "aiCommit.configuration.openai.title": "Nota AI Commit：OpenAI 设置",
+  "aiCommit.configuration.gemini.title": "Nota AI Commit：Gemini 设置",
   "aiCommit.command.aiCommit.title": "Nota AI Commit - 生成提交信息",
   "aiCommit.command.showAvailableModels.title": "显示可用的 OpenAI 模型",
   "aiCommit.config.diffSource.description": "生成时使用哪些 Git 改动：auto（优先暂存，若暂存区为空则使用未暂存）、staged（仅暂存）、unstaged（仅未暂存）、staged+unstaged（两者合并并添加分隔符）。",

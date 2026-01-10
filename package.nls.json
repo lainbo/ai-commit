@@ -1,7 +1,7 @@
 {
-  "aiCommit.configuration.general.title": "AI Commit: General",
-  "aiCommit.configuration.openai.title": "AI Commit: OpenAI",
-  "aiCommit.configuration.gemini.title": "AI Commit: Gemini",
+  "aiCommit.configuration.general.title": "Nota AI Commit: General",
+  "aiCommit.configuration.openai.title": "Nota AI Commit: OpenAI",
+  "aiCommit.configuration.gemini.title": "Nota AI Commit: Gemini",
   "aiCommit.command.aiCommit.title": "Nota AI Commit - Generate commit message",
   "aiCommit.command.showAvailableModels.title": "Show Available OpenAI Models",
   "aiCommit.config.diffSource.description": "Which git changes to use for generation: auto (prefer staged, fallback to unstaged), staged, unstaged, or staged+unstaged.",
