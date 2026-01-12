@@ -12,7 +12,7 @@
   "aiCommit.config.gitLogAuthorScope.enum.all": "All contributors",
   "aiCommit.config.gitLogAuthorScope.enum.self": "Only me (git config user.name)",
   "aiCommit.config.commitLanguage.description": "Commit message language",
-  "aiCommit.config.azureApiVersion.description": "AZURE API VERSION",
+  "aiCommit.config.azureApiVersion.description": "AZURE API VERSION (leave empty if not using Azure)",
   "aiCommit.config.openaiApiKey.description": "OpenAI API Key",
   "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL (optional). Should end with /v1 (e.g. https://api.openai.com/v1). For Azure OpenAI, use your deployments URL.",
   "aiCommit.config.openaiModel.description": "OpenAI MODEL, you can select a model from the list by running the 'Show Available OpenAI Models' command",

@@ -12,7 +12,7 @@
   "aiCommit.config.gitLogAuthorScope.enum.all": "所有人",
   "aiCommit.config.gitLogAuthorScope.enum.self": "仅自己（git config user.name）",
   "aiCommit.config.commitLanguage.description": "提交信息语言",
-  "aiCommit.config.azureApiVersion.description": "Azure OpenAI API 版本（api-version）",
+  "aiCommit.config.azureApiVersion.description": "Azure OpenAI API 版本（api-version），非 Azure 供应商请留空",
   "aiCommit.config.openaiApiKey.description": "OpenAI API Key",
   "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL（可选）。请以 /v1 结尾，例如 https://api.openai.com/v1。使用 Azure OpenAI 时填写 deployments 地址，并配置 ai-commit.AZURE_API_VERSION。",
   "aiCommit.config.openaiModel.description": "OpenAI 模型。可运行“显示可用的 OpenAI 模型”从列表中选择。",
