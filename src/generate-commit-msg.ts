@@ -7,7 +7,7 @@ import { ChatGPTAPI, getOpenAIChatCompletionsRequestUrl } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
 import { GeminiAPI, getGeminiGenerateContentRequestUrl } from './gemini-utils';
-import { getOutputChannel, logError, logInfo, logSection, showOutput } from './output';
+import { getOutputChannel, logError, logInfo, logSection } from './output';
 
 type DiffSource = 'auto' | 'staged' | 'unstaged' | 'staged+unstaged';
 
@@ -81,7 +81,6 @@ export async function getRepo(arg) {
 export async function generateCommitMsg(arg) {
   return ProgressHandler.withProgress('', async (progress) => {
     try {
-      showOutput(true);
       logSection('开始生成提交信息');
       const configManager = ConfigurationManager.getInstance();
       const repo = await getRepo(arg);

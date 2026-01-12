@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { generateCommitMsg } from './generate-commit-msg';
 import { ConfigurationManager } from './config';
-import { logError, showOutput } from './output';
+import { logError } from './output';
 
 /**
  * Manages the registration and disposal of commands.
@@ -59,7 +59,6 @@ export class CommandManager {
         await handler(...args);
       } catch (error) {
         logError(error, `命令执行失败：${command}`);
-        showOutput(true);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         const result = await vscode.window.showErrorMessage(
