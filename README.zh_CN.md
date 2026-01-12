@@ -25,6 +25,7 @@
 - 本 Fork 的主要改动：
   - 即使没有暂存变更也允许生成提交信息（默认：优先使用暂存区 diff；若为空则回退到未暂存 diff）
   - 新增配置 `ai-commit.DIFF_SOURCE` 用于控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
+  - 新增配置 `ai-commit.REFERENCE_GIT_LOG`，可把最近的 `git log --oneline` 提交历史作为模型参考上下文
   - 支持 Gemini 自定义 Endpoint URL
 
 ## ✨ 特性
@@ -46,7 +47,7 @@
 ## 🤯 使用
 
 1. 确保您已经安装并启用了 `Nota AI Commit` 扩展。
-2. 在 VSCode 设置中，找到 "ai-commit" 配置项，并按需配置（已分组：插件设置 / OpenAI 设置 / Gemini 设置）。
+2. 在 VSCode 设置中，找到 "ai-commit" 配置项，并按需配置（已分组：插件设置 / Git 设置 / OpenAI 设置 / Gemini 设置）。
 3. 在项目中进行更改（暂存或未暂存）。
 4. （可选）如果你想为提交信息提供额外上下文，请在点击 Nota AI Commit 按钮前，在源代码管理面板的消息输入框中输入这些上下文。
 5. 在 "Source Control" 面板的提交消息输入框旁，点击 "Nota AI Commit" 图标按钮。点击后，扩展会生成提交信息（会考虑你输入的额外上下文）并填充到输入框中。
@@ -54,6 +55,20 @@
 
 > **Note**\
 > 如果超过最大 token 长度请分批将代码添加到暂存区。
+
+### 🔒 隐私说明
+
+本插件需要将内容发送到你配置的 AI 供应商侧（OpenAI / Azure OpenAI / Gemini）来生成提交信息：
+
+- 会发送选中的 git diff（由 `DIFF_SOURCE` 决定暂存/未暂存/合并）。
+- 会发送你在源代码管理提交输入框里填写的“额外上下文”。
+- 若开启 `REFERENCE_GIT_LOG`，还会发送最近的 `git log --oneline` 提交历史（可按作者过滤）。
+
+隐私风险提示：
+
+- diff / log 可能包含敏感信息（密钥、token、私有代码、内部链接、客户数据、用户名或各类标识符），建议在生成前先检查。
+- 请遵守你所在组织的安全与合规要求（例如：不允许将专有代码上传到第三方服务时，请勿启用）。
+- 建议只暂存必要改动、限制 `GIT_LOG_COUNT`，或将作者范围设为 `self` 以降低暴露面。
 
 ### ⚙️ 配置
 
@@ -64,6 +79,9 @@
 | 配置               |  类型  |         默认         | 必填 |                                                       说明                                                        |
 | :----------------- | :----: | :------------------: | :--: | :---------------------------------------------------------------------------------------------------------------: |
 | DIFF_SOURCE        | string |         auto         |  否  |       使用哪些改动：`auto`（优先暂存）、`staged`、`unstaged`、`staged+unstaged`（会增加分隔符）。       |
+| REFERENCE_GIT_LOG  |  bool  |        false         |  否  |       是否把最近的 `git log --oneline` 提交历史作为额外上下文提供给模型参考（默认关闭）。       |
+| GIT_LOG_COUNT      | number |          20          |  否  |                         提供给模型参考的最近提交条数（1-50）。                         |
+| GIT_LOG_AUTHOR_SCOPE | string |        all         |  否  |            提交历史包含哪些作者：`all` 或 `self`（`self` 使用 `git config user.name` 过滤）。            |
 | AI_PROVIDER        | string |        openai        |  是  |                                      选择 AI Provider：`openai` 或 `gemini`。                                      |
 | OPENAI_API_KEY     | string |         None         |  是  |        当 `AI Provider` 设为 `OpenAI` 时必填。[OpenAI token](https://platform.openai.com/account/api-keys)         |
 | OPENAI_BASE_URL    | string |         None         |  否  |                 如使用 Azure：`https://{resource}.openai.azure.com/openai/deployments/{model}`                  |

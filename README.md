@@ -25,6 +25,7 @@ This repository is a fork of `sitoi/ai-commit`:
 - Changes in this fork:
   - Allow generating commit messages even when there are no staged changes (default behavior: prefer staged diff, fallback to unstaged diff)
   - Add `ai-commit.DIFF_SOURCE` setting to control which git changes are used (`auto` / `staged` / `unstaged` / `staged+unstaged`)
+  - Add `ai-commit.REFERENCE_GIT_LOG` setting to provide recent `git log --oneline` history as model context
   - Supports Custom Endpoint URLs for Gemini
 
 ## ✨ Features
@@ -46,7 +47,7 @@ This repository is a fork of `sitoi/ai-commit`:
 ## 🤯 Usage
 
 1. Ensure that you have installed and enabled the "Nota AI Commit" extension.
-2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed (grouped as: General / OpenAI / Gemini).
+2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed (grouped as: General / Git / OpenAI / Gemini).
 3. Make changes in your project (staged or unstaged).
 4. (Optional) If you want to provide additional context for the commit message, type it in the Source Control panel's message input box before clicking the Nota AI Commit button.
 5. Next to the commit message input box in the "Source Control" panel, click the "Nota AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
@@ -54,6 +55,20 @@ This repository is a fork of `sitoi/ai-commit`:
 
 > **Note**\
 > If the code exceeds the maximum token length, consider adding it to the staging area in batches.
+
+### 🔒 Privacy
+
+This extension sends content to your configured AI provider (OpenAI / Azure OpenAI / Gemini) to generate the commit message.
+
+- It will send the selected git diff (staged/unstaged, depending on `DIFF_SOURCE`).
+- It will send any "Additional context" you typed in the SCM commit input box.
+- If you enable `REFERENCE_GIT_LOG`, it will also send recent `git log --oneline` history (optionally filtered by author).
+
+Privacy risk tips:
+
+- Your diff/log may contain sensitive information (secrets, tokens, private code, internal URLs, customer data, usernames, or identifiers). Review before generating.
+- Follow your organization's policies (e.g. do not upload proprietary code to third-party services unless allowed).
+- Prefer staging only what you need, and keep the referenced history limited (or set author scope to `self`) to reduce exposure.
 
 ### ⚙️ Configuration
 
@@ -64,6 +79,9 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 | Configuration      |  Type  |       Default        | Required |                                                       Notes                                                        |
 | :----------------- | :----: | :------------------: | :------: | :----------------------------------------------------------------------------------------------------------------: |
 | DIFF_SOURCE        | string |         auto         |    No    |      Which changes to use: `auto` (prefer staged), `staged`, `unstaged`, `staged+unstaged` (adds separators).      |
+| REFERENCE_GIT_LOG  |  bool  |        false         |    No    |        Include recent `git log --oneline` history as additional context for the model (disabled by default).        |
+| GIT_LOG_COUNT      | number |          20          |    No    |                           How many recent commits to include (1-50).                           |
+| GIT_LOG_AUTHOR_SCOPE | string |         all        |    No    |                      Which authors to include: `all` or `self` (uses `git config user.name`).                      |
 | AI_PROVIDER        | string |        openai        |   Yes    |                                     Select AI Provider: `openai` or `gemini`.                                      |
 | OPENAI_API_KEY     | string |         None         |   Yes    |    Required when `AI Provider` is set to `OpenAI`. [OpenAI token](https://platform.openai.com/account/api-keys)    |
 | OPENAI_BASE_URL    | string |         None         |    No    |                If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                 |

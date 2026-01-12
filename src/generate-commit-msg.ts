@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager } from './config';
-import { getDiffStaged, getDiffUnstaged } from './git-utils';
+import { getDiffStaged, getDiffUnstaged, getGitLogOneline, GitLogAuthorScope } from './git-utils';
 import { ChatGPTAPI } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
@@ -19,7 +19,8 @@ type DiffSource = 'auto' | 'staged' | 'unstaged' | 'staged+unstaged';
  */
 const generateCommitMessageChatCompletionPrompt = async (
   diff: string,
-  additionalContext?: string
+  additionalContext?: string,
+  gitLogContext?: string
 ) => {
   const INIT_MESSAGES_PROMPT = await getMainCommitPrompt();
   const chatContextAsCompletionRequest = [...INIT_MESSAGES_PROMPT];
@@ -28,6 +29,14 @@ const generateCommitMessageChatCompletionPrompt = async (
     chatContextAsCompletionRequest.push({
       role: 'user',
       content: `Additional context for the changes:\n${additionalContext}`
+    });
+  }
+
+  if (gitLogContext) {
+    console.log('gitLogContext: ', gitLogContext);
+    chatContextAsCompletionRequest.push({
+      role: 'user',
+      content: `Recent git commit history (git log --oneline). Use it only as style/reference, do not copy blindly:\n${gitLogContext}`
     });
   }
 
@@ -132,6 +141,33 @@ export async function generateCommitMsg(arg) {
       }
 
       const additionalContext = scmInputBox.value.trim();
+      const shouldReferenceGitLog = configManager.getConfig<boolean>(
+        ConfigKeys.REFERENCE_GIT_LOG,
+        false
+      );
+
+      let gitLogContext: string | undefined;
+      if (shouldReferenceGitLog) {
+        progress.report({ message: 'Reading git commit history...' });
+
+        const gitLogCount = configManager.getConfig<number>(
+          ConfigKeys.GIT_LOG_COUNT,
+          20
+        );
+        const gitLogAuthorScope = configManager.getConfig<GitLogAuthorScope>(
+          ConfigKeys.GIT_LOG_AUTHOR_SCOPE,
+          'all'
+        );
+
+        const logResult = await getGitLogOneline(repo, {
+          maxCount: gitLogCount,
+          authorScope: gitLogAuthorScope
+        });
+
+        if (!logResult.error && logResult.log.trim()) {
+          gitLogContext = logResult.log.trim();
+        }
+      }
 
       progress.report({
         message: additionalContext
@@ -140,7 +176,8 @@ export async function generateCommitMsg(arg) {
       });
       const messages = await generateCommitMessageChatCompletionPrompt(
         selectedDiff,
-        additionalContext
+        additionalContext,
+        gitLogContext
       );
 
       progress.report({

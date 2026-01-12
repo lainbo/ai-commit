@@ -2,7 +2,7 @@
   "name": "nota-ai-commit-lainbo",
   "displayName": "Nota AI Commit",
   "description": "Use Azure/OpenAI/Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "engines": {
     "node": ">=16",
     "vscode": "^1.77.0"
@@ -118,6 +118,36 @@
             "type": "string",
             "default": "",
             "description": "%aiCommit.config.systemPrompt.description%"
+          }
+        }
+      },
+      {
+        "title": "%aiCommit.configuration.git.title%",
+        "properties": {
+          "ai-commit.REFERENCE_GIT_LOG": {
+            "type": "boolean",
+            "default": false,
+            "description": "%aiCommit.config.referenceGitLog.description%"
+          },
+          "ai-commit.GIT_LOG_COUNT": {
+            "type": "number",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 50,
+            "description": "%aiCommit.config.gitLogCount.description%"
+          },
+          "ai-commit.GIT_LOG_AUTHOR_SCOPE": {
+            "type": "string",
+            "default": "all",
+            "enum": [
+              "all",
+              "self"
+            ],
+            "enumDescriptions": [
+              "%aiCommit.config.gitLogAuthorScope.enum.all%",
+              "%aiCommit.config.gitLogAuthorScope.enum.self%"
+            ],
+            "description": "%aiCommit.config.gitLogAuthorScope.description%"
           }
         }
       },
