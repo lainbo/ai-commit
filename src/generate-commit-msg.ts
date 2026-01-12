@@ -3,10 +3,11 @@ import { ChatCompletionMessageParam } from 'openai/resources';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager } from './config';
 import { getDiffStaged, getDiffUnstaged, getGitLogOneline, GitLogAuthorScope } from './git-utils';
-import { ChatGPTAPI } from './openai-utils';
+import { ChatGPTAPI, getOpenAIChatCompletionsRequestUrl } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
-import { GeminiAPI } from './gemini-utils';
+import { GeminiAPI, getGeminiGenerateContentRequestUrl } from './gemini-utils';
+import { getOutputChannel, logError, logInfo, logSection, showOutput } from './output';
 
 type DiffSource = 'auto' | 'staged' | 'unstaged' | 'staged+unstaged';
 
@@ -33,7 +34,6 @@ const generateCommitMessageChatCompletionPrompt = async (
   }
 
   if (gitLogContext) {
-    console.log('gitLogContext: ', gitLogContext);
     chatContextAsCompletionRequest.push({
       role: 'user',
       content: `Recent git commit history (git log --oneline). Use it only as style/reference, do not copy blindly:\n${gitLogContext}`
@@ -81,11 +81,15 @@ export async function getRepo(arg) {
 export async function generateCommitMsg(arg) {
   return ProgressHandler.withProgress('', async (progress) => {
     try {
+      showOutput(true);
+      logSection('开始生成提交信息');
       const configManager = ConfigurationManager.getInstance();
       const repo = await getRepo(arg);
 
       const aiProvider = configManager.getConfig<string>(ConfigKeys.AI_PROVIDER, 'openai');
       const diffSource = configManager.getConfig<DiffSource>(ConfigKeys.DIFF_SOURCE, 'auto');
+      logInfo(`AI Provider: ${aiProvider}`);
+      logInfo(`Diff Source: ${diffSource}`);
 
       progress.report({ message: 'Getting git changes...' });
       const [stagedResult, unstagedResult] = await Promise.all([
@@ -159,13 +163,24 @@ export async function generateCommitMsg(arg) {
           'all'
         );
 
+        logInfo(
+          `读取 git log --oneline：maxCount=${gitLogCount}, authorScope=${gitLogAuthorScope}`
+        );
         const logResult = await getGitLogOneline(repo, {
           maxCount: gitLogCount,
           authorScope: gitLogAuthorScope
         });
 
-        if (!logResult.error && logResult.log.trim()) {
+        if (logResult.error) {
+          logError(new Error(logResult.error), '读取 git log 失败');
+        } else if (logResult.log.trim()) {
           gitLogContext = logResult.log.trim();
+          const actualCount = gitLogContext.split(/\r?\n/).filter(Boolean).length;
+          logInfo(`最近提交记录（实际返回 ${actualCount} 条）：`);
+          getOutputChannel().appendLine(gitLogContext);
+          getOutputChannel().appendLine('-----');
+        } else {
+          logInfo('git log 为空（仓库可能尚无提交）。');
         }
       }
 
@@ -193,46 +208,87 @@ export async function generateCommitMsg(arg) {
           if (!geminiApiKey) {
             throw new Error('Gemini API Key not configured');
           }
+          const modelName = configManager.getConfig<string>(ConfigKeys.GEMINI_MODEL);
+          const baseUrl = configManager.getConfig<string>(ConfigKeys.GEMINI_BASE_URL);
+          logInfo(
+            `Gemini Request URL: ${getGeminiGenerateContentRequestUrl(modelName, baseUrl)}`
+          );
           commitMessage = await GeminiAPI(messages);
         } else {
           const openaiApiKey = configManager.getConfig<string>(ConfigKeys.OPENAI_API_KEY);
           if (!openaiApiKey) {
             throw new Error('OpenAI API Key not configured');
           }
+          const baseURL = configManager.getConfig<string>(ConfigKeys.OPENAI_BASE_URL);
+          const apiVersion = configManager.getConfig<string>(ConfigKeys.AZURE_API_VERSION);
+          logInfo(
+            `OpenAI Request URL: ${getOpenAIChatCompletionsRequestUrl(baseURL, apiVersion)}`
+          );
           commitMessage = await ChatGPTAPI(messages as ChatCompletionMessageParam[]);
         }
 
 
         if (commitMessage) {
           scmInputBox.value = commitMessage;
+          logSection('AI 返回结果');
+          getOutputChannel().appendLine(commitMessage);
         } else {
           throw new Error('Failed to generate commit message');
         }
       } catch (err) {
+        logError(err, `AI 请求失败（provider=${aiProvider}）`);
         let errorMessage = 'An unexpected error occurred';
 
-        if (aiProvider === 'openai' && err.response?.status) {
-          switch (err.response.status) {
-            case 401:
-              errorMessage = 'Invalid OpenAI API key or unauthorized access';
-              break;
-            case 429:
-              errorMessage = 'Rate limit exceeded. Please try again later';
-              break;
-            case 500:
-              errorMessage = 'OpenAI server error. Please try again later';
-              break;
-            case 503:
-              errorMessage = 'OpenAI service is temporarily unavailable';
-              break;
+        const status = (err as any)?.status ?? (err as any)?.response?.status;
+        if (aiProvider === 'openai') {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (typeof status === 'number') {
+            switch (status) {
+              case 401:
+                errorMessage = 'Invalid OpenAI API key or unauthorized access';
+                break;
+              case 400:
+                if (
+                  /Invalid JSON payload received/i.test(msg) &&
+                  /Unknown name "\\s*messages\\s*"/i.test(msg)
+                ) {
+                  errorMessage =
+                    'OpenAI 请求返回了 Google/Gemini 风格的 400（不认识 messages/temperature）。' +
+                    '这通常意味着你把 ai-commit.OPENAI_BASE_URL 配成了 Gemini/Google 的接口，或使用了非 OpenAI 兼容的代理。' +
+                    '请检查：1) ai-commit.AI_PROVIDER 是否应切换为 gemini；2) OPENAI_BASE_URL 是否为 OpenAI 风格的 /v1（不要包含 /chat/completions，也不要是 googleapis.com）。';
+                } else {
+                  errorMessage = `OpenAI Bad Request (400): ${msg}`;
+                }
+                break;
+              case 404:
+                errorMessage =
+                  'OpenAI endpoint not found (404). Please check OPENAI_BASE_URL (should end with /v1, do not include /chat/completions).';
+                break;
+              case 429:
+                errorMessage = 'Rate limit exceeded. Please try again later';
+                break;
+              case 500:
+                errorMessage = 'OpenAI server error. Please try again later';
+                break;
+              case 503:
+                errorMessage = 'OpenAI service is temporarily unavailable';
+                break;
+              default:
+                errorMessage = `OpenAI API error (status ${status}): ${msg}`;
+                break;
+            }
+          } else {
+            errorMessage = `OpenAI API error: ${msg}`;
           }
         } else if (aiProvider === 'gemini') {
-          errorMessage = `Gemini API error: ${err.message}`;
+          const msg = err instanceof Error ? err.message : String(err);
+          errorMessage = `Gemini API error: ${msg}`;
         }
 
         throw new Error(errorMessage);
       }
     } catch (error) {
+      logError(error, '生成提交信息失败');
       throw error;
     }
   });

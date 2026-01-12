@@ -3,8 +3,23 @@
   "tasks": [
     {
       "type": "npm",
+      "label": "npm: watch",
       "script": "watch",
-      "problemMatcher": "$ts-webpack-watch",
+      "problemMatcher": {
+        "owner": "webpack",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "^(ERROR in .+)$",
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\s*\\[webpack-cli\\] Compiler starting\\.\\.\\.",
+          "endsPattern": "^\\s*(\\[webpack-cli\\] Compiler finished|webpack\\s+\\d+\\.\\d+\\.\\d+\\s+compiled\\s+.*)$"
+        }
+      },
       "isBackground": true,
       "presentation": {
         "reveal": "never",

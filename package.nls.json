@@ -14,13 +14,13 @@
   "aiCommit.config.commitLanguage.description": "Commit message language",
   "aiCommit.config.azureApiVersion.description": "AZURE API VERSION",
   "aiCommit.config.openaiApiKey.description": "OpenAI API Key",
-  "aiCommit.config.openaiBaseUrl.description": "OpenAI BASE URL",
+  "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL (optional). Should end with /v1 (e.g. https://api.openai.com/v1). For Azure OpenAI, use your deployments URL.",
   "aiCommit.config.openaiModel.description": "OpenAI MODEL, you can select a model from the list by running the 'Show Available OpenAI Models' command",
   "aiCommit.config.systemPrompt.description": "Custom system prompt for generating commit messages",
   "aiCommit.config.openaiTemperature.description": "OpenAI temperature setting (0-2). Higher values make output more random, lower values more deterministic.",
   "aiCommit.config.aiProvider.description": "AI Provider to use (OpenAI or Gemini)",
   "aiCommit.config.geminiApiKey.description": "Gemini API Key",
-  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL (optional). Defaults to the official endpoint when empty.",
+  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL (optional). Leave empty to use the official endpoint. If using a proxy/vendor, fill only the service base URL (do NOT include a specific endpoint path).",
   "aiCommit.config.geminiModel.description": "Gemini Model to use",
   "aiCommit.config.geminiTemperature.description": "Gemini temperature setting (0-2). Controls randomness."
 }

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { CommandManager } from './commands';
 import { ConfigurationManager } from './config';
+import { initOutputChannel, logError } from './output';
 
 /**
  * Activates the extension and registers commands.
@@ -9,6 +10,7 @@ import { ConfigurationManager } from './config';
  */
 export async function activate(context: vscode.ExtensionContext) {
   try {
+    initOutputChannel(context);
     const configManager = ConfigurationManager.getInstance(context);
 
     const commandManager = new CommandManager(context);
@@ -38,6 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   } catch (error) {
     console.error('Failed to activate extension:', error);
+    logError(error, '扩展激活失败');
     throw error;
   }
 }

@@ -14,13 +14,13 @@
   "aiCommit.config.commitLanguage.description": "提交信息语言",
   "aiCommit.config.azureApiVersion.description": "Azure OpenAI API 版本（api-version）",
   "aiCommit.config.openaiApiKey.description": "OpenAI API Key",
-  "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL（使用 Azure 时填写你的部署地址）",
+  "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL（可选）。请以 /v1 结尾，例如 https://api.openai.com/v1。使用 Azure OpenAI 时填写 deployments 地址，并配置 ai-commit.AZURE_API_VERSION。",
   "aiCommit.config.openaiModel.description": "OpenAI 模型。可运行“显示可用的 OpenAI 模型”从列表中选择。",
   "aiCommit.config.systemPrompt.description": "用于生成提交信息的自定义 system prompt",
   "aiCommit.config.openaiTemperature.description": "OpenAI temperature（0-2）。值越大输出越随机，值越小越稳定。",
   "aiCommit.config.aiProvider.description": "AI 提供方（OpenAI 或 Gemini）",
   "aiCommit.config.geminiApiKey.description": "Gemini API Key",
-  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL（可选）。留空则使用官方接口地址；填写第三方供应商提供的 endpoint 可切换。",
+  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL（可选）。留空则使用官方接口地址；如使用代理/第三方供应商，只填写服务的 Base URL（不要填写具体的 endpoint 路径）。",
   "aiCommit.config.geminiModel.description": "Gemini 模型",
   "aiCommit.config.geminiTemperature.description": "Gemini temperature（0-2），控制输出随机性。"
 }

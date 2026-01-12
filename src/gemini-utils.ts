@@ -1,6 +1,33 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ConfigKeys, ConfigurationManager } from './config';
 
+export function getGeminiGenerateContentRequestUrl(
+  modelName: string | undefined,
+  baseUrl: string | undefined
+): string {
+  const effectiveBaseURL =
+    (baseUrl && baseUrl.trim()) || 'https://generativelanguage.googleapis.com';
+  const safeModel = (modelName || '').trim() || '{model}';
+  const path = `/v1beta/models/${safeModel}:generateContent`;
+
+  try {
+    const url = new URL(effectiveBaseURL);
+    url.pathname = joinUrlPath(url.pathname, path);
+    return url.toString();
+  } catch {
+    return `${effectiveBaseURL.replace(/\/+$/, '')}${path}`;
+  }
+}
+
+function joinUrlPath(basePath: string, suffix: string): string {
+  const a = (basePath || '').replace(/\/+$/, '');
+  const b = (suffix || '').replace(/^\/+/, '');
+  if (!a) {
+    return `/${b}`;
+  }
+  return `${a}/${b}`;
+}
+
 /**
  * Creates and returns a Gemini API configuration object.
  * @returns {Object} - The Gemini API configuration object.
