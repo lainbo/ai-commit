@@ -14,20 +14,6 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 
 </div>
 
-## 🍴 Fork Notice
-
-This repository is a fork of `sitoi/ai-commit`:
-
-- Upstream: https://github.com/sitoi/ai-commit
-- GitHub: https://github.com/lainbo/ai-commit
-- Marketplace: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-- Purpose: personal tweaks and republishing under my own VS Code publisher
-- Changes in this fork:
-  - Allow generating commit messages even when there are no staged changes (default behavior: prefer staged diff, fallback to unstaged diff)
-  - Add `ai-commit.DIFF_SOURCE` setting to control which git changes are used (`auto` / `staged` / `unstaged` / `staged+unstaged`)
-  - Add `ai-commit.REFERENCE_GIT_LOG` setting to provide recent `git log --oneline` history as model context
-  - Supports Custom Endpoint URLs for Gemini
-
 ## ✨ Features
 
 - 🤯 Support generating commit messages based on git diffs using ChatGPT / Azure API / DeepSeek / Gemini API.
@@ -35,6 +21,16 @@ This repository is a fork of `sitoi/ai-commit`:
 - 😜 Support adding Gitmoji.
 - 🛠️ Support custom system prompt.
 - 📝 Support Conventional Commits specification.
+
+---
+
+**This project is forked from [sitoi/ai-commit](https://github.com/sitoi/ai-commit) with the following enhancements:**
+
+- ✅ Allow generating commit messages even when there are no staged changes (default behavior: prefer staged diff, fallback to unstaged diff)
+- ✅ Add `ai-commit.DIFF_SOURCE` setting to control which git changes are used (`auto` / `staged` / `unstaged` / `staged+unstaged`)
+- ✅ Add `ai-commit.SCM_INPUT_BEHAVIOR` setting to control whether to send the SCM input box content as AI context (`context` / `ignore`)
+- ✅ Add `ai-commit.REFERENCE_GIT_LOG` setting to provide recent `git log --oneline` history as model context
+- ✅ Supports Custom Endpoint URLs for Gemini
 
 ## 📦 Installation
 
@@ -44,35 +40,7 @@ This repository is a fork of `sitoi/ai-commit`:
 > **Note**\
 > Make sure your node version >= 16
 
-## 🤯 Usage
-
-1. Ensure that you have installed and enabled the "Nota AI Commit" extension.
-2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed (grouped as: General / Git / OpenAI / Gemini).
-3. Make changes in your project (staged or unstaged).
-4. (Optional) If you want to provide additional context/constraints (for example, the Bug ID that must be included in commit messages for bug fixes as required by your company), please enter the context you wish to provide to the AI in the message input box of the Source Control panel before clicking the Nota AI Commit button (requires configuring `SCM_INPUT_BEHAVIOR=context`).
-5. Next to the commit message input box in the "Source Control" panel, click the "Nota AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
-6. Review the generated commit message, and if you are satisfied, proceed to commit your changes.
-
-> **Note**\
-> If the code exceeds the maximum token length, consider adding it to the staging area in batches.
-
-### 🔒 Privacy
-
-This extension sends content to your configured AI provider (OpenAI / Azure OpenAI / Gemini) to generate the commit message.
-
-- It will send the selected git diff (staged/unstaged, depending on `DIFF_SOURCE`).
-- If `SCM_INPUT_BEHAVIOR=context`, it will also send the content you typed in the SCM commit input box as additional context/constraints.
-- If you enable `REFERENCE_GIT_LOG`, it will also send recent `git log --oneline` history (optionally filtered by author).
-
-Privacy risk tips:
-
-- Your diff/log may contain sensitive information (secrets, tokens, private code, internal URLs, customer data, usernames, or identifiers). Review before generating.
-- Follow your organization's policies (e.g. do not upload proprietary code to third-party services unless allowed).
-- Prefer staging only what you need, and keep the referenced history limited (or set author scope to `self`) to reduce exposure.
-
 ### ⚙️ Configuration
-
-> **Note** Version >= 0.0.5 Don't need to configure `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC`, Default Prompt is [prompt/with_gitmoji.md](https://github.com/lainbo/ai-commit/blob/main/prompt/with_gitmoji.md), If don't need to use `Gitmoji`. Please set `SYSTEM_PROMPT` to your custom prompt, please refer to [prompt/without_gitmoji.md](https://github.com/lainbo/ai-commit/blob/main/prompt/without_gitmoji.md).
 
 In the VSCode settings, locate the "ai-commit" configuration options and configure them as needed:
 
@@ -101,28 +69,3 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 ## 📝 License
 
 This project is [MIT](./LICENSE) licensed.
-
-<!-- LINK GROUP -->
-
-[github-codespace-link]: https://codespaces.new/lainbo/ai-commit
-[github-codespace-shield]: https://github.com/lainbo/ai-commit/blob/main/images/codespaces.png?raw=true
-[github-contributors-link]: https://github.com/lainbo/ai-commit/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/lainbo/ai-commit?color=c4f042&labelColor=black&style=flat-square
-[github-forks-link]: https://github.com/lainbo/ai-commit/network/members
-[github-forks-shield]: https://img.shields.io/github/forks/lainbo/ai-commit?color=8ae8ff&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/lainbo/ai-commit/issues
-[github-issues-shield]: https://img.shields.io/github/issues/lainbo/ai-commit?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/lainbo/ai-commit/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/github/license/lainbo/ai-commit?color=white&labelColor=black&style=flat-square
-[github-stars-link]: https://github.com/lainbo/ai-commit/network/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/lainbo/ai-commit?color=ffcb47&labelColor=black&style=flat-square
-[pr-welcome-link]: https://github.com/lainbo/ai-commit/pulls
-[pr-welcome-shield]: https://img.shields.io/badge/🤯_pr_welcome-%E2%86%92-ffcb47?labelColor=black&style=for-the-badge
-[github-contrib-link]: https://github.com/lainbo/ai-commit/graphs/contributors
-[github-contrib-shield]: https://contrib.rocks/image?repo=lainbo%2Fai-commit
-[vscode-marketplace-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-[vscode-marketplace-shield]: https://img.shields.io/vscode-marketplace/v/lainbo.nota-ai-commit-lainbo.svg?label=vscode%20marketplace&color=blue&labelColor=black&style=flat-square
-[total-installs-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-[total-installs-shield]: https://img.shields.io/vscode-marketplace/d/lainbo.nota-ai-commit-lainbo.svg?&color=greeen&labelColor=black&style=flat-square
-[avarage-rating-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-[avarage-rating-shield]: https://img.shields.io/vscode-marketplace/r/lainbo.nota-ai-commit-lainbo.svg?&color=green&labelColor=black&style=flat-square

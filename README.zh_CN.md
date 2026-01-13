@@ -14,20 +14,6 @@
 
 </div>
 
-## 🍴 Fork 说明
-
-本仓库 Fork 自 `sitoi/ai-commit`：
-
-- 上游仓库：https://github.com/sitoi/ai-commit
-- GitHub：https://github.com/lainbo/ai-commit
-- 插件市场：https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-- Fork 目的：基于个人使用习惯做小调整
-- 本 Fork 的主要改动：
-  - 即使没有暂存变更也允许生成提交信息（默认：优先使用暂存区 diff；若为空则回退到未暂存 diff）
-  - 新增配置 `ai-commit.DIFF_SOURCE` 用于控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
-  - 新增配置 `ai-commit.REFERENCE_GIT_LOG`，可把最近的 `git log --oneline` 提交历史作为模型参考上下文
-  - 支持 Gemini 自定义 Endpoint URL
-
 ## ✨ 特性
 
 - 🤯 支持使用 ChatGPT / Azure API / DeepSeek / Gemini API 基于 git diffs 生成提交信息。
@@ -35,6 +21,16 @@
 - 😜 支持添加 Gitmoji。
 - 🛠️ 支持自定义系统提示词。
 - 📝 支持 Conventional Commits 规范。
+
+---
+
+**本项目 Fork 自 [sitoi/ai-commit](https://github.com/sitoi/ai-commit)，并新增以下功能：**
+
+- ✅ 即使没有暂存变更也允许生成提交信息（默认：优先使用暂存区 diff；若为空则回退到未暂存 diff）
+- ✅ 新增配置 `ai-commit.DIFF_SOURCE` 用于控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
+- ✅ 新增配置 `ai-commit.SCM_INPUT_BEHAVIOR` 用于控制是否将源代码管理输入框内容作为 AI 上下文发送（`context` / `ignore`）
+- ✅ 新增配置 `ai-commit.REFERENCE_GIT_LOG`，可把最近的 `git log --oneline` 提交历史作为模型参考上下文
+- ✅ 支持 Gemini 自定义 Endpoint URL
 
 ## 📦 安装
 
@@ -44,35 +40,7 @@
 > **Note**\
 > 请确保 Node.js 版本 >= 16
 
-## 🤯 使用
-
-1. 确保您已经安装并启用了 `Nota AI Commit` 扩展。
-2. 在 VSCode 设置中，找到 "ai-commit" 配置项，并按需配置（已分组：插件设置 / Git 设置 / OpenAI 设置 / Gemini 设置）。
-3. 在项目中进行更改（暂存或未暂存）。
-4. （可选）如果你想提供额外上下文/约束（例如公司要求修改bug的提交信息必须包含的 Bug ID），请在点击 Nota AI Commit 按钮前，在源代码管理面板的消息输入框中输入你想提供给AI的上下文（需要配置 `SCM_INPUT_BEHAVIOR=context`）。
-5. 在 "Source Control" 面板的提交消息输入框旁，点击 "Nota AI Commit" 图标按钮。点击后，扩展会生成提交信息（会考虑你输入的额外上下文）并填充到输入框中。
-6. 检查生成的提交信息，如满意即可提交改动。
-
-> **Note**\
-> 如果超过最大 token 长度请分批将代码添加到暂存区。
-
-### 🔒 隐私说明
-
-本插件需要将内容发送到你配置的 AI 供应商侧（OpenAI / Azure OpenAI / Gemini）来生成提交信息：
-
-- 会发送选中的 git diff（由 `DIFF_SOURCE` 决定暂存/未暂存/合并）。
-- 若 `SCM_INPUT_BEHAVIOR=context`，还会发送你在源代码管理提交输入框里填写的内容，作为额外上下文/约束。
-- 若开启 `REFERENCE_GIT_LOG`，还会发送最近的 `git log --oneline` 提交历史（可按作者过滤）。
-
-隐私风险提示：
-
-- diff / log 可能包含敏感信息（密钥、token、私有代码、内部链接、客户数据、用户名或各类标识符），建议在生成前先检查。
-- 请遵守你所在组织的安全与合规要求（例如：不允许将专有代码上传到第三方服务时，请勿启用）。
-- 建议只暂存必要改动、限制 `GIT_LOG_COUNT`，或将作者范围设为 `self` 以降低暴露面。
-
 ### ⚙️ 配置
-
-> **Note** 版本 >= 0.0.5 时不需要配置 `EMOJI_ENABLED` 和 `FULL_GITMOJI_SPEC`；默认提示词为 [prompt/with_gitmoji.md](https://github.com/lainbo/ai-commit/blob/main/prompt/with_gitmoji.md)。如不需要使用 `Gitmoji`，请将 `SYSTEM_PROMPT` 设置为你的自定义提示词，可参考 [prompt/without_gitmoji.md](https://github.com/lainbo/ai-commit/blob/main/prompt/without_gitmoji.md)。
 
 在 VSCode 设置中，找到 "ai-commit" 配置项，并按需配置：
 
@@ -101,28 +69,3 @@
 ## 📝 License
 
 This project is [MIT](./LICENSE) licensed.
-
-<!-- LINK GROUP -->
-
-[github-codespace-link]: https://codespaces.new/lainbo/ai-commit
-[github-codespace-shield]: https://github.com/lainbo/ai-commit/blob/main/images/codespaces.png?raw=true
-[github-contributors-link]: https://github.com/lainbo/ai-commit/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/lainbo/ai-commit?color=c4f042&labelColor=black&style=flat-square
-[github-forks-link]: https://github.com/lainbo/ai-commit/network/members
-[github-forks-shield]: https://img.shields.io/github/forks/lainbo/ai-commit?color=8ae8ff&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/lainbo/ai-commit/issues
-[github-issues-shield]: https://img.shields.io/github/issues/lainbo/ai-commit?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/lainbo/ai-commit/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/github/license/lainbo/ai-commit?color=white&labelColor=black&style=flat-square
-[github-stars-link]: https://github.com/lainbo/ai-commit/network/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/lainbo/ai-commit?color=ffcb47&labelColor=black&style=flat-square
-[pr-welcome-link]: https://github.com/lainbo/ai-commit/pulls
-[pr-welcome-shield]: https://img.shields.io/badge/🤯_pr_welcome-%E2%86%92-ffcb47?labelColor=black&style=for-the-badge
-[github-contrib-link]: https://github.com/lainbo/ai-commit/graphs/contributors
-[github-contrib-shield]: https://contrib.rocks/image?repo=lainbo%2Fai-commit
-[vscode-marketplace-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-[vscode-marketplace-shield]: https://img.shields.io/vscode-marketplace/v/lainbo.nota-ai-commit-lainbo.svg?label=vscode%20marketplace&color=blue&labelColor=black&style=flat-square
-[total-installs-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-[total-installs-shield]: https://img.shields.io/vscode-marketplace/d/lainbo.nota-ai-commit-lainbo.svg?&labelColor=black&style=flat-square
-[avarage-rating-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
-[avarage-rating-shield]: https://img.shields.io/vscode-marketplace/r/lainbo.nota-ai-commit-lainbo.svg?color=green&labelColor=black&style=flat-square
