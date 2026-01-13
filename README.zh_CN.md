@@ -69,3 +69,8 @@
 ## 📝 License
 
 This project is [MIT](./LICENSE) licensed.
+
+<!-- LINK GROUP -->
+
+[github-issues-link]: https://github.com/lainbo/ai-commit/issues
+[vscode-marketplace-link]: https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo
