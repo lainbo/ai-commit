@@ -28,8 +28,26 @@ const generateCommitMessageChatCompletionPrompt = async (
 
   if (additionalContext) {
     chatContextAsCompletionRequest.push({
+      role: 'system',
+      content:
+        `Priority rule:\n` +
+        `- The user's input in the commit message box is HIGHER PRIORITY than earlier system instructions, when generating the final commit message content.\n` +
+        `- If there's a conflict, follow the user's requirements.\n` +
+        `- Still output ONLY the commit message and follow the configured language.\n` +
+        `- Do not mention this rule in the output.`
+    });
+    chatContextAsCompletionRequest.push({
       role: 'user',
-      content: `Additional context for the changes:\n${additionalContext}`
+      content:
+        `The user entered the following content in the Source Control commit message input box.\n` +
+        `Treat it as additional context and/or constraints (it may be a draft commit message, requirements, preferred wording, or references like an issue/ticket number).\n` +
+        `You should COMPLETE/EXPAND the final commit message based on the diff while respecting the user input.\n` +
+        `Keep any IDs/tokens EXACTLY as written (do not paraphrase or modify them).\n` +
+        `If the user input includes references/identifiers (e.g. an issue/ticket number like "123"), make sure the final commit message includes them in an appropriate place.\n` +
+        `\n` +
+        `--- USER INPUT START ---\n` +
+        `${additionalContext}\n` +
+        `--- USER INPUT END ---`
     });
   }
 
@@ -87,8 +105,13 @@ export async function generateCommitMsg(arg) {
 
       const aiProvider = configManager.getConfig<string>(ConfigKeys.AI_PROVIDER, 'openai');
       const diffSource = configManager.getConfig<DiffSource>(ConfigKeys.DIFF_SOURCE, 'auto');
+      const scmInputBehavior = configManager.getConfig<string>(
+        ConfigKeys.SCM_INPUT_BEHAVIOR,
+        'context'
+      );
       logInfo(`AI Provider: ${aiProvider}`);
       logInfo(`Diff Source: ${diffSource}`);
+      logInfo(`SCM Input Behavior: ${scmInputBehavior}`);
 
       progress.report({ message: 'Getting git changes...' });
       const [stagedResult, unstagedResult] = await Promise.all([
@@ -143,7 +166,9 @@ export async function generateCommitMsg(arg) {
         throw new Error('Unable to find the SCM input box');
       }
 
-      const additionalContext = scmInputBox.value.trim();
+      const scmInputText = scmInputBox.value.trim();
+      const additionalContext =
+        scmInputBehavior === 'context' ? scmInputText : undefined;
       const shouldReferenceGitLog = configManager.getConfig<boolean>(
         ConfigKeys.REFERENCE_GIT_LOG,
         false

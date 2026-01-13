@@ -49,7 +49,7 @@ This repository is a fork of `sitoi/ai-commit`:
 1. Ensure that you have installed and enabled the "Nota AI Commit" extension.
 2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed (grouped as: General / Git / OpenAI / Gemini).
 3. Make changes in your project (staged or unstaged).
-4. (Optional) If you want to provide additional context for the commit message, type it in the Source Control panel's message input box before clicking the Nota AI Commit button.
+4. (Optional) If you want to provide additional context/constraints (for example, the Bug ID that must be included in commit messages for bug fixes as required by your company), please enter the context you wish to provide to the AI in the message input box of the Source Control panel before clicking the Nota AI Commit button (requires configuring `SCM_INPUT_BEHAVIOR=context`).
 5. Next to the commit message input box in the "Source Control" panel, click the "Nota AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
 6. Review the generated commit message, and if you are satisfied, proceed to commit your changes.
 
@@ -61,7 +61,7 @@ This repository is a fork of `sitoi/ai-commit`:
 This extension sends content to your configured AI provider (OpenAI / Azure OpenAI / Gemini) to generate the commit message.
 
 - It will send the selected git diff (staged/unstaged, depending on `DIFF_SOURCE`).
-- It will send any "Additional context" you typed in the SCM commit input box.
+- If `SCM_INPUT_BEHAVIOR=context`, it will also send the content you typed in the SCM commit input box as additional context/constraints.
 - If you enable `REFERENCE_GIT_LOG`, it will also send recent `git log --oneline` history (optionally filtered by author).
 
 Privacy risk tips:
@@ -79,6 +79,7 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 | Configuration      |  Type  |       Default        | Required |                                                       Notes                                                        |
 | :----------------- | :----: | :------------------: | :------: | :----------------------------------------------------------------------------------------------------------------: |
 | DIFF_SOURCE        | string |         auto         |    No    |      Which changes to use: `auto` (prefer staged), `staged`, `unstaged`, `staged+unstaged` (adds separators).      |
+| SCM_INPUT_BEHAVIOR | string |       context        |    No    | How to treat SCM input box content: `ignore` (always ignore), `context` (send as additional context/requirements). |
 | REFERENCE_GIT_LOG  |  bool  |        false         |    No    |        Include recent `git log --oneline` history as additional context for the model (disabled by default).        |
 | GIT_LOG_COUNT      | number |          20          |    No    |                           How many recent commits to include (1-50).                           |
 | GIT_LOG_AUTHOR_SCOPE | string |         all        |    No    |                      Which authors to include: `all` or `self` (uses `git config user.name`).                      |

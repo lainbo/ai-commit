@@ -49,7 +49,7 @@
 1. 确保您已经安装并启用了 `Nota AI Commit` 扩展。
 2. 在 VSCode 设置中，找到 "ai-commit" 配置项，并按需配置（已分组：插件设置 / Git 设置 / OpenAI 设置 / Gemini 设置）。
 3. 在项目中进行更改（暂存或未暂存）。
-4. （可选）如果你想为提交信息提供额外上下文，请在点击 Nota AI Commit 按钮前，在源代码管理面板的消息输入框中输入这些上下文。
+4. （可选）如果你想提供额外上下文/约束（例如公司要求修改bug的提交信息必须包含的 Bug ID），请在点击 Nota AI Commit 按钮前，在源代码管理面板的消息输入框中输入你想提供给AI的上下文（需要配置 `SCM_INPUT_BEHAVIOR=context`）。
 5. 在 "Source Control" 面板的提交消息输入框旁，点击 "Nota AI Commit" 图标按钮。点击后，扩展会生成提交信息（会考虑你输入的额外上下文）并填充到输入框中。
 6. 检查生成的提交信息，如满意即可提交改动。
 
@@ -61,7 +61,7 @@
 本插件需要将内容发送到你配置的 AI 供应商侧（OpenAI / Azure OpenAI / Gemini）来生成提交信息：
 
 - 会发送选中的 git diff（由 `DIFF_SOURCE` 决定暂存/未暂存/合并）。
-- 会发送你在源代码管理提交输入框里填写的“额外上下文”。
+- 若 `SCM_INPUT_BEHAVIOR=context`，还会发送你在源代码管理提交输入框里填写的内容，作为额外上下文/约束。
 - 若开启 `REFERENCE_GIT_LOG`，还会发送最近的 `git log --oneline` 提交历史（可按作者过滤）。
 
 隐私风险提示：
@@ -79,6 +79,7 @@
 | 配置               |  类型  |         默认         | 必填 |                                                       说明                                                        |
 | :----------------- | :----: | :------------------: | :--: | :---------------------------------------------------------------------------------------------------------------: |
 | DIFF_SOURCE        | string |         auto         |  否  |       使用哪些改动：`auto`（优先暂存）、`staged`、`unstaged`、`staged+unstaged`（会增加分隔符）。       |
+| SCM_INPUT_BEHAVIOR | string |       context        |  否  | 生成时如何处理输入框：`ignore`（始终忽略），`context`（作为额外上下文/约束发送，例如 Bug ID）。 |
 | REFERENCE_GIT_LOG  |  bool  |        false         |  否  |       是否把最近的 `git log --oneline` 提交历史作为额外上下文提供给模型参考（默认关闭）。       |
 | GIT_LOG_COUNT      | number |          20          |  否  |                         提供给模型参考的最近提交条数（1-50）。                         |
 | GIT_LOG_AUTHOR_SCOPE | string |        all         |  否  |            提交历史包含哪些作者：`all` 或 `self`（`self` 使用 `git config user.name` 过滤）。            |
