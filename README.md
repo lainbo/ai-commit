@@ -45,7 +45,7 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 In the VSCode settings, locate the "ai-commit" configuration options and configure them as needed:
 
 | Configuration      |  Type  |       Default        | Required |                                                       Notes                                                        |
-| :----------------- | :----: | :------------------: | :------: | :----------------------------------------------------------------------------------------------------------------: |
+| :----------------- | :----: | :------------------: | :------: | :----------------------------------------------------------------------------------------------------------------- |
 | DIFF_SOURCE        | string |         auto         |    No    |      Which changes to use: `auto` (prefer staged), `staged`, `unstaged`, `staged+unstaged` (adds separators).      |
 | SCM_INPUT_BEHAVIOR | string |       context        |    No    | How to treat SCM input box content: `ignore` (always ignore), `context` (send as additional context/requirements). |
 | REFERENCE_GIT_LOG  |  bool  |        false         |    No    |        Include recent `git log --oneline` history as additional context for the model (disabled by default).        |
