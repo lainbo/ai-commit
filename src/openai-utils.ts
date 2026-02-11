@@ -61,7 +61,7 @@ function getOpenAIConfig() {
   const apiVersion = configManager.getConfig<string>(ConfigKeys.AZURE_API_VERSION);
 
   if (!apiKey) {
-    throw new Error('The OPENAI_API_KEY environment variable is missing or empty.');
+    throw new Error('The OPENAI_API_KEY configuration is missing or empty.');
   }
 
   const config: {

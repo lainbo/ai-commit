@@ -306,7 +306,34 @@ export async function generateCommitMsg(arg) {
           }
         } else if (aiProvider === 'gemini') {
           const msg = err instanceof Error ? err.message : String(err);
-          errorMessage = `Gemini API error: ${msg}`;
+          if (typeof status === 'number') {
+            switch (status) {
+              case 400:
+                errorMessage = `Gemini Bad Request (400): ${msg}`;
+                break;
+              case 401:
+              case 403:
+                errorMessage = 'Invalid Gemini API key or unauthorized access. Please check ai-commit.GEMINI_API_KEY.';
+                break;
+              case 404:
+                errorMessage = 'Gemini endpoint not found (404). Please check ai-commit.GEMINI_BASE_URL and ai-commit.GEMINI_MODEL.';
+                break;
+              case 429:
+                errorMessage = 'Gemini rate limit exceeded. Please try again later.';
+                break;
+              case 500:
+                errorMessage = 'Gemini server error. Please try again later.';
+                break;
+              case 503:
+                errorMessage = 'Gemini service is temporarily unavailable.';
+                break;
+              default:
+                errorMessage = `Gemini API error (status ${status}): ${msg}`;
+                break;
+            }
+          } else {
+            errorMessage = `Gemini API error: ${msg}`;
+          }
         }
 
         throw new Error(errorMessage);

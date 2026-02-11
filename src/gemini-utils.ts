@@ -38,7 +38,7 @@ function getGeminiConfig() {
   const apiKey = configManager.getConfig<string>(ConfigKeys.GEMINI_API_KEY);
 
   if (!apiKey) {
-    throw new Error('The GEMINI_API_KEY environment variable is missing or empty.');
+    throw new Error('The GEMINI_API_KEY configuration is missing or empty.');
   }
 
   const config: {
