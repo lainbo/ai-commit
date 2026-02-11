@@ -17,14 +17,23 @@ export class CommandManager {
       vscode.commands.executeCommand('workbench.action.openSettings', 'ai-commit')
     );
 
-    // Show available OpenAI models
+    // Show available models (currently only OpenAI supports listing models via API)
     this.registerCommand('ai-commit.showAvailableModels', async () => {
       const configManager = ConfigurationManager.getInstance();
+      const aiProvider = configManager.getConfig<string>('AI_PROVIDER', 'openai');
+
+      if (aiProvider === 'gemini') {
+        vscode.window.showInformationMessage(
+          'Gemini does not support listing models via API. Please manually set the model in ai-commit.GEMINI_MODEL.'
+        );
+        return;
+      }
+
       const models = await configManager.getAvailableOpenAIModels();
       const selected = await vscode.window.showQuickPick(models, {
         placeHolder: 'Please select a model'
       });
-      
+
       if (selected) {
         const config = vscode.workspace.getConfiguration('ai-commit');
         await config.update('OPENAI_MODEL', selected, vscode.ConfigurationTarget.Global);

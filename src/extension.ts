@@ -23,10 +23,13 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     });
 
-    const apiKey = configManager.getConfig<string>('OPENAI_API_KEY');
+    const aiProvider = configManager.getConfig<string>('AI_PROVIDER', 'openai');
+    const apiKeyConfig = aiProvider === 'gemini' ? 'GEMINI_API_KEY' : 'OPENAI_API_KEY';
+    const apiKey = configManager.getConfig<string>(apiKeyConfig);
     if (!apiKey) {
+      const providerLabel = aiProvider === 'gemini' ? 'Gemini' : 'OpenAI';
       const result = await vscode.window.showWarningMessage(
-        'OpenAI API Key not configured. Would you like to configure it now?',
+        `${providerLabel} API Key not configured. Would you like to configure it now?`,
         'Yes',
         'No'
       );
@@ -34,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
       if (result === 'Yes') {
         await vscode.commands.executeCommand(
           'workbench.action.openSettings',
-          'ai-commit.OPENAI_API_KEY'
+          `ai-commit.${apiKeyConfig}`
         );
       }
     }

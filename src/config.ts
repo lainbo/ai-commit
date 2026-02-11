@@ -51,8 +51,10 @@ export class ConfigurationManager {
       if (event.affectsConfiguration('ai-commit')) {
         this.configCache.clear();
 
-        if (event.affectsConfiguration('ai-commit.OPENAI_BASE_URL') ||
-          event.affectsConfiguration('ai-commit.OPENAI_API_KEY')) {
+        const aiProvider = this.getConfig<string>('AI_PROVIDER', 'openai');
+        if (aiProvider === 'openai' &&
+          (event.affectsConfiguration('ai-commit.OPENAI_BASE_URL') ||
+          event.affectsConfiguration('ai-commit.OPENAI_API_KEY'))) {
           this.updateOpenAIModelList();
         }
       }
