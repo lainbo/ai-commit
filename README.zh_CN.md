@@ -19,7 +19,7 @@
 - 🤯 支持使用 ChatGPT / Azure API / DeepSeek / Gemini API 基于 git diffs 生成提交信息。
 - 🗺️ 支持多语言提交信息。
 - 😜 支持添加 Gitmoji。
-- 🛠️ 支持自定义系统提示词。
+- 🛠️ 支持自定义系统提示词，并可开关是否发送系统提示词。
 - 📝 支持 Conventional Commits 规范。
 
 ---
@@ -62,7 +62,8 @@
 | GEMINI_MODEL       | string | gemini-2.0-flash-001 |  是  |                                 Gemini 模型。当前模型选择仅限于配置项。                                 |
 | GEMINI_TEMPERATURE | number |         0.7          |  否  |         控制输出随机性。Gemini 范围：0-2。值越低越集中，值越高越有创造性。         |
 | AI_COMMIT_LANGUAGE | string |          en          |  是  |                                                  支持 19 种语言                                                  |
-| SYSTEM_PROMPT      | string |         None         |  否  |                                                  自定义系统提示词                                                  |
+| AI_COMMIT_USE_SYSTEM_PROMPT | boolean |         true         |  否  | 如果你的模型或智能体已经内置了 system prompt，建议关闭此项。 |
+| AI_COMMIT_SYSTEM_PROMPT     | string  |         None         |  否  | 自定义系统提示词，仅在 `AI_COMMIT_USE_SYSTEM_PROMPT` 开启时生效。 |
 
 ---
 

@@ -10,6 +10,7 @@ import { createGeminiAPIClient } from './gemini-utils';
  * @property {string} OPENAI_MODEL - The model used for OpenAI.
  * @property {string} AZURE_API_VERSION - The version of Azure API.
  * @property {string} AI_COMMIT_LANGUAGE - The language for AI commit messages.
+ * @property {boolean} USE_SYSTEM_PROMPT - Whether to send the system prompt.
  * @property {string} SYSTEM_PROMPT - The system prompt for generating commit messages.
  * @property {string} OPENAI_TEMPERATURE - The temperature setting for OpenAI API.
  */
@@ -19,6 +20,7 @@ export enum ConfigKeys {
   OPENAI_MODEL = 'OPENAI_MODEL',
   AZURE_API_VERSION = 'AZURE_API_VERSION',
   AI_COMMIT_LANGUAGE = 'AI_COMMIT_LANGUAGE',
+  USE_SYSTEM_PROMPT = 'AI_COMMIT_USE_SYSTEM_PROMPT',
   SYSTEM_PROMPT = 'AI_COMMIT_SYSTEM_PROMPT',
   OPENAI_TEMPERATURE = 'OPENAI_TEMPERATURE',
   DIFF_SOURCE = 'DIFF_SOURCE',
