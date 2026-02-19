@@ -113,8 +113,16 @@ Remember: All output MUST be in ${language} language. You are to act as a pure c
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of prompts.
  */
 export const getMainCommitPrompt = async () => {
-  const language = ConfigurationManager.getInstance().getConfig<string>(
-    ConfigKeys.AI_COMMIT_LANGUAGE
+  const config = ConfigurationManager.getInstance();
+  const shouldUseSystemPrompt = config.getConfig<boolean>(
+    ConfigKeys.USE_SYSTEM_PROMPT,
+    true
   );
+
+  if (!shouldUseSystemPrompt) {
+    return [];
+  }
+
+  const language = config.getConfig<string>(ConfigKeys.AI_COMMIT_LANGUAGE);
   return [INIT_MAIN_PROMPT(language)];
 };

@@ -113,10 +113,15 @@
           "description": "OpenAI MODEL, you can select a model from the list by running the 'Show Available OpenAI Models' command",
           "type": "string"
         },
+        "ai-commit.AI_COMMIT_USE_SYSTEM_PROMPT": {
+          "type": "boolean",
+          "default": true,
+          "description": "Send system prompt with the request. Disable this if your model or agent already has a built-in system prompt."
+        },
         "ai-commit.AI_COMMIT_SYSTEM_PROMPT": {
           "type": "string",
           "default": "",
-          "description": "Custom system prompt for generating commit messages"
+          "description": "Custom system prompt for generating commit messages (used only when sending system prompt is enabled)."
         },
         "ai-commit.OPENAI_TEMPERATURE": {
           "type": "number",
