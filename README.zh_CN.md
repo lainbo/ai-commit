@@ -54,7 +54,7 @@
 | AI_PROVIDER        | string |        openai        |  是  |                                      选择 AI Provider：`openai` 或 `gemini`。                                      |
 | OPENAI_API_KEY     | string |         None         |  是  |        当 `AI Provider` 设为 `OpenAI` 时必填。[OpenAI token](https://platform.openai.com/account/api-keys)         |
 | OPENAI_BASE_URL    | string |         None         |  否  |                 如使用 Azure：`https://{resource}.openai.azure.com/openai/deployments/{model}`                  |
-| OPENAI_MODEL       | string |        gpt-4o        |  是  |        OpenAI 模型；你可以运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。        |
+| OPENAI_MODEL       | string |      gpt-5-mini      |  是  |        OpenAI 模型；你可以运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。        |
 | AZURE_API_VERSION  | string |         None         |  否  |                                                  AZURE_API_VERSION                                                  |
 | OPENAI_TEMPERATURE | number |         0.7          |  否  |                控制输出随机性。范围：0-2。值越低越集中，值越高越有创造性。                |
 | GEMINI_API_KEY     | string |         None         |  是  |        当 `AI Provider` 设为 `Gemini` 时必填。[Gemini API key](https://makersuite.google.com/app/apikey)        |

@@ -98,7 +98,7 @@ export class ConfigurationManager {
       // If the current selected model is not in the available list, set it to the default value
       const availableModels = models.data.map(model => model.id);
       if (!availableModels.includes(currentModel)) {
-        await config.update('OPENAI_MODEL', 'gpt-4', vscode.ConfigurationTarget.Global);
+        await config.update('OPENAI_MODEL', 'gpt-5-mini', vscode.ConfigurationTarget.Global);
       }
     } catch (error) {
       console.error('Failed to fetch OpenAI models:', error);
