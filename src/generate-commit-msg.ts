@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager } from './config';
-import { getDiffStaged, getDiffUnstaged, getGitLogOneline, GitLogAuthorScope } from './git-utils';
+import { getDiffStaged, getDiffUnstaged, getUntrackedDiff, getGitLogOneline, GitLogAuthorScope } from './git-utils';
 import { ChatGPTAPI, getOpenAIChatCompletionsRequestUrl } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
@@ -114,9 +114,10 @@ export async function generateCommitMsg(arg) {
       logInfo(`SCM Input Behavior: ${scmInputBehavior}`);
 
       progress.report({ message: 'Getting git changes...' });
-      const [stagedResult, unstagedResult] = await Promise.all([
+      const [stagedResult, unstagedResult, untrackedResult] = await Promise.all([
         getDiffStaged(repo),
-        getDiffUnstaged(repo)
+        getDiffUnstaged(repo),
+        getUntrackedDiff(repo)
       ]);
 
       if (stagedResult.error) {
@@ -128,7 +129,11 @@ export async function generateCommitMsg(arg) {
       }
 
       const stagedDiff = stagedResult.diff.trim();
-      const unstagedDiff = unstagedResult.diff.trim();
+      const rawUnstagedDiff = unstagedResult.diff.trim();
+      const rawUntrackedDiff = untrackedResult.diff.trim();
+      const unstagedDiff = [rawUnstagedDiff, rawUntrackedDiff]
+        .filter(Boolean)
+        .join('\n');
 
       let selectedDiff = '';
       switch (diffSource) {

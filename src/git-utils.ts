@@ -64,6 +64,70 @@ export async function getDiffUnstaged(
   }
 }
 
+const MAX_UNTRACKED_FILES = 20;
+
+/**
+ * Retrieves a pseudo-diff for untracked (new) files in the working tree.
+ */
+export async function getUntrackedDiff(
+  repo: any
+): Promise<{ diff: string; error?: string }> {
+  try {
+    const rootPath = resolveRepoRootPath(repo);
+
+    if (!rootPath) {
+      throw new Error('No workspace folder found');
+    }
+
+    const git = simpleGit(rootPath);
+    const status = await git.status();
+    const untrackedFiles = status.not_added;
+
+    if (!untrackedFiles || untrackedFiles.length === 0) {
+      return { diff: '', error: null };
+    }
+
+    const filesToProcess = untrackedFiles.slice(0, MAX_UNTRACKED_FILES);
+    const skippedCount = untrackedFiles.length - filesToProcess.length;
+
+    const diffs: string[] = [];
+
+    for (const file of filesToProcess) {
+      try {
+        const fileDiff = await git
+          .raw(['diff', '--no-index', '--', '/dev/null', file])
+          .catch((err: any) => {
+            // git diff --no-index exits with code 1 when files differ,
+            // simple-git treats this as an error but the output is valid diff
+            if (typeof err === 'string') return err;
+            if (err?.message) return err.message;
+            return '';
+          });
+
+        if (fileDiff && fileDiff.trim()) {
+          diffs.push(fileDiff.trim());
+        }
+      } catch {
+        diffs.push(
+          `diff --git a/${file} b/${file}\nnew file\n(unable to read content)`
+        );
+      }
+    }
+
+    if (skippedCount > 0) {
+      diffs.push(`\n(${skippedCount} more untracked files not shown)`);
+    }
+
+    return {
+      diff: diffs.join('\n'),
+      error: null
+    };
+  } catch (error) {
+    console.error('Error reading untracked files:', error);
+    return { diff: '', error: error.message };
+  }
+}
+
 /**
  * Retrieves recent git commit history in a privacy-friendly format (git log --oneline).
  */
