@@ -19,7 +19,7 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 - 🤯 Support generating commit messages based on git diffs using ChatGPT / Azure API / DeepSeek / Gemini API.
 - 🗺️ Support multi-language commit messages.
 - 😜 Support adding Gitmoji.
-- 🛠️ Support custom system prompt.
+- 🛠️ Support custom system prompt and toggling whether it is sent.
 - 📝 Support Conventional Commits specification.
 
 ---
@@ -62,7 +62,8 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 | GEMINI_MODEL       | string | gemini-2.0-flash-001 |   Yes    |                       Gemini MODEL. Currently, model selection is limited to configuration.                        |
 | GEMINI_TEMPERATURE | number |         0.7          |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative |
 | AI_COMMIT_LANGUAGE | string |          en          |   Yes    |                                               Supports 19 languages                                                |
-| SYSTEM_PROMPT      | string |         None         |    No    |                                                Custom system prompt                                                |
+| AI_COMMIT_USE_SYSTEM_PROMPT | boolean |         true         |    No    | Disable this if your model or agent already contains a built-in system prompt. |
+| AI_COMMIT_SYSTEM_PROMPT     | string  |         None         |    No    | Custom system prompt, used only when `AI_COMMIT_USE_SYSTEM_PROMPT` is enabled. |
 
 ---
 

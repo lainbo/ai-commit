@@ -114,6 +114,11 @@
             ],
             "type": "string"
           },
+          "ai-commit.AI_COMMIT_USE_SYSTEM_PROMPT": {
+            "type": "boolean",
+            "default": true,
+            "description": "%aiCommit.config.useSystemPrompt.description%"
+          },
           "ai-commit.AI_COMMIT_SYSTEM_PROMPT": {
             "type": "string",
             "default": "",
