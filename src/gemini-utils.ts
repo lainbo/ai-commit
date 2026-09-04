@@ -1,5 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from '@google/genai';
 import { ConfigKeys, ConfigurationManager } from './config';
+
+interface GeminiMessage {
+  role: string;
+  content: string;
+}
 
 export function getGeminiGenerateContentRequestUrl(
   modelName: string | undefined,
@@ -28,66 +33,55 @@ function joinUrlPath(basePath: string, suffix: string): string {
   return `${a}/${b}`;
 }
 
-/**
- * Creates and returns a Gemini API configuration object.
- * @returns {Object} - The Gemini API configuration object.
- * @throws {Error} - Throws an error if the API key is missing or empty.
- */
-function getGeminiConfig() {
+export async function createGeminiAPIClient(): Promise<GoogleGenAI> {
   const configManager = ConfigurationManager.getInstance();
-  const apiKey = configManager.getConfig<string>(ConfigKeys.GEMINI_API_KEY);
+  const apiKey = await configManager.getGeminiApiKey();
+  const baseUrl = configManager.getConfig<string>(ConfigKeys.GEMINI_BASE_URL);
 
   if (!apiKey) {
-    throw new Error('The GEMINI_API_KEY configuration is missing or empty.');
+    throw new Error(
+      'Gemini API Key not configured. Run "Nota AI Commit: Set Gemini API Key".'
+    );
   }
 
-  const config: {
-    apiKey: string;
-  } = {
-    apiKey
-  };
-
-  return config;
+  return new GoogleGenAI({
+    apiKey,
+    ...(baseUrl?.trim() ? { httpOptions: { baseUrl: baseUrl.trim() } } : {})
+  });
 }
 
-/**
- * Creates and returns a Gemini API instance.
- * @returns {GoogleGenerativeAI} - The Gemini API instance.
- */
-export function createGeminiAPIClient() {
-  const config = getGeminiConfig();
-  return new GoogleGenerativeAI(config.apiKey);
-}
+export async function GeminiAPI(messages: GeminiMessage[]): Promise<string> {
+  const gemini = await createGeminiAPIClient();
+  const configManager = ConfigurationManager.getInstance();
+  const model = configManager.getConfig<string>(
+    ConfigKeys.GEMINI_MODEL,
+    'gemini-3.8-flash'
+  );
+  const temperature = configManager.getConfig<number>(
+    ConfigKeys.GEMINI_TEMPERATURE,
+    0.7
+  );
+  const systemInstruction = messages
+    .filter(({ role }) => role === 'system')
+    .map(({ content }) => content)
+    .join('\n\n');
+  const contents = messages
+    .filter(({ role }) => role !== 'system')
+    .map(({ content }) => content)
+    .join('\n\n');
 
-/**
- * Sends a chat completion request to the Gemini API.
- * @param {any[]} messages - The messages to send to the API.
- * @returns {Promise<string>} - A promise that resolves to the API response.
- */
-export async function GeminiAPI(messages: any[]) {
-  try {
-    const gemini = createGeminiAPIClient();
-    const configManager = ConfigurationManager.getInstance();
-    const modelName = configManager.getConfig<string>(ConfigKeys.GEMINI_MODEL);
-    const temperature = configManager.getConfig<number>(ConfigKeys.GEMINI_TEMPERATURE, 0.7);
-    const baseUrl = configManager.getConfig<string>(ConfigKeys.GEMINI_BASE_URL);
+  const response = await gemini.models.generateContent({
+    model,
+    contents,
+    config: {
+      temperature,
+      ...(systemInstruction ? { systemInstruction } : {})
+    }
+  });
 
-    const requestOptions = baseUrl && baseUrl.trim() ? { baseUrl: baseUrl.trim() } : undefined;
-    const model = gemini.getGenerativeModel({ model: modelName }, requestOptions);
-    const chat = model.startChat({
-      generationConfig: {
-        temperature: temperature,
-      },
-    });
-
-    const result = await chat.sendMessage(messages.map(msg => msg.content));
-    const response = result.response;
-    const text = response.text();
-
-    return text;
-
-  } catch (error) {
-    console.error('Gemini API call failed:', error);
-    throw error;
+  if (!response.text) {
+    throw new Error('Gemini response was empty or incompatible.');
   }
+
+  return response.text;
 }

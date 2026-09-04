@@ -7,8 +7,7 @@ export function getOpenAIChatCompletionsRequestUrl(
   azureApiVersion: string | undefined
 ): string {
   const isAzure = Boolean(azureApiVersion && azureApiVersion.trim());
-  const effectiveBaseURL =
-    (baseURL && baseURL.trim()) || 'https://api.openai.com/v1';
+  const effectiveBaseURL = (baseURL && baseURL.trim()) || 'https://api.openai.com/v1';
 
   try {
     const url = new URL(effectiveBaseURL);
@@ -54,14 +53,16 @@ function getOpenAIBaseURLHint(
  * @returns {Object} - The OpenAI configuration object.
  * @throws {Error} - Throws an error if the API key is missing or empty.
  */
-function getOpenAIConfig() {
+async function getOpenAIConfig() {
   const configManager = ConfigurationManager.getInstance();
-  const apiKey = configManager.getConfig<string>(ConfigKeys.OPENAI_API_KEY);
+  const apiKey = await configManager.getOpenAIApiKey();
   const baseURL = configManager.getConfig<string>(ConfigKeys.OPENAI_BASE_URL);
   const apiVersion = configManager.getConfig<string>(ConfigKeys.AZURE_API_VERSION);
 
   if (!apiKey) {
-    throw new Error('The OPENAI_API_KEY configuration is missing or empty.');
+    throw new Error(
+      'OpenAI API Key not configured. Run "Nota AI Commit: Set OpenAI API Key".'
+    );
   }
 
   const config: {
@@ -95,8 +96,8 @@ function getOpenAIConfig() {
  * Creates and returns an OpenAI API instance.
  * @returns {OpenAI} - The OpenAI API instance.
  */
-export function createOpenAIApi() {
-  const config = getOpenAIConfig();
+export async function createOpenAIApi() {
+  const config = await getOpenAIConfig();
   return new OpenAI(config);
 }
 
@@ -106,17 +107,21 @@ export function createOpenAIApi() {
  * @returns {Promise<string>} - A promise that resolves to the API response.
  */
 export async function ChatGPTAPI(messages: ChatCompletionMessageParam[]) {
-  const openai = createOpenAIApi();
+  const openai = await createOpenAIApi();
   const configManager = ConfigurationManager.getInstance();
-  const model = configManager.getConfig<string>(ConfigKeys.OPENAI_MODEL);
-  const temperature = configManager.getConfig<number>(ConfigKeys.OPENAI_TEMPERATURE, 0.7);
+  const model = configManager.getConfig<string>(ConfigKeys.OPENAI_MODEL, 'gpt-5-mini');
+  const temperature = configManager.getConfig<number | undefined>(
+    ConfigKeys.OPENAI_TEMPERATURE
+  );
   const baseURL = configManager.getConfig<string>(ConfigKeys.OPENAI_BASE_URL);
   const apiVersion = configManager.getConfig<string>(ConfigKeys.AZURE_API_VERSION);
+  const samplingOptions =
+    temperature !== undefined && !isReasoningModel(model) ? { temperature } : {};
 
   const completion = await openai.chat.completions.create({
     model,
     messages: messages as ChatCompletionMessageParam[],
-    temperature
+    ...samplingOptions
   });
 
   const content = completion?.choices?.[0]?.message?.content;
@@ -126,6 +131,11 @@ export async function ChatGPTAPI(messages: ChatCompletionMessageParam[]) {
   }
 
   return content;
+}
+
+function isReasoningModel(model: string): boolean {
+  const modelName = model.toLowerCase().split('/').pop() ?? '';
+  return modelName.startsWith('gpt-5') || /^o\d(?:-|$)/.test(modelName);
 }
 
 function looksLikeGeminiOrGoogleEndpoint(url: string): boolean {

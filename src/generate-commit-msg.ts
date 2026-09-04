@@ -284,9 +284,11 @@ export async function generateCommitMsg(arg) {
         let commitMessage: string | undefined;
 
         if (aiProvider === 'gemini') {
-          const geminiApiKey = configManager.getConfig<string>(ConfigKeys.GEMINI_API_KEY);
+          const geminiApiKey = await configManager.getGeminiApiKey();
           if (!geminiApiKey) {
-            throw new Error('Gemini API Key not configured');
+            throw new Error(
+              'Gemini API Key not configured. Run "Nota AI Commit: Set Gemini API Key".'
+            );
           }
           const modelName = configManager.getConfig<string>(ConfigKeys.GEMINI_MODEL);
           const baseUrl = configManager.getConfig<string>(ConfigKeys.GEMINI_BASE_URL);
@@ -295,18 +297,21 @@ export async function generateCommitMsg(arg) {
           );
           commitMessage = await GeminiAPI(messages);
         } else {
-          const openaiApiKey = configManager.getConfig<string>(ConfigKeys.OPENAI_API_KEY);
+          const openaiApiKey = await configManager.getOpenAIApiKey();
           if (!openaiApiKey) {
-            throw new Error('OpenAI API Key not configured');
+            throw new Error(
+              'OpenAI API Key not configured. Run "Nota AI Commit: Set OpenAI API Key".'
+            );
           }
           const baseURL = configManager.getConfig<string>(ConfigKeys.OPENAI_BASE_URL);
-          const apiVersion = configManager.getConfig<string>(ConfigKeys.AZURE_API_VERSION);
+          const apiVersion = configManager.getConfig<string>(
+            ConfigKeys.AZURE_API_VERSION
+          );
           logInfo(
             `OpenAI Request URL: ${getOpenAIChatCompletionsRequestUrl(baseURL, apiVersion)}`
           );
           commitMessage = await ChatGPTAPI(messages as ChatCompletionMessageParam[]);
         }
-
 
         if (commitMessage) {
           scmInputBox.value = commitMessage;
@@ -369,10 +374,12 @@ export async function generateCommitMsg(arg) {
                 break;
               case 401:
               case 403:
-                errorMessage = 'Invalid Gemini API key or unauthorized access. Please check ai-commit.GEMINI_API_KEY.';
+                errorMessage =
+                  'Invalid Gemini API key or unauthorized access. Run "Nota AI Commit: Set Gemini API Key" to update it.';
                 break;
               case 404:
-                errorMessage = 'Gemini endpoint not found (404). Please check ai-commit.GEMINI_BASE_URL and ai-commit.GEMINI_MODEL.';
+                errorMessage =
+                  'Gemini endpoint not found (404). Please check ai-commit.GEMINI_BASE_URL and ai-commit.GEMINI_MODEL.';
                 break;
               case 429:
                 errorMessage = 'Gemini rate limit exceeded. Please try again later.';

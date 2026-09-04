@@ -1,20 +1,7 @@
 import * as vscode from 'vscode';
 import { createOpenAIApi } from './openai-utils';
-import { createGeminiAPIClient } from './gemini-utils';
 
-/**
- * Configuration keys used in the AI commit extension.
- * @constant {Object}
- * @property {string} OPENAI_API_KEY - The key for OpenAI API.
- * @property {string} OPENAI_BASE_URL - The base URL for OpenAI API.
- * @property {string} OPENAI_MODEL - The model used for OpenAI.
- * @property {string} AZURE_API_VERSION - The version of Azure API.
- * @property {string} AI_COMMIT_LANGUAGE - The language for AI commit messages.
- * @property {string} SYSTEM_PROMPT - The system prompt for generating commit messages.
- * @property {string} OPENAI_TEMPERATURE - The temperature setting for OpenAI API.
- */
 export enum ConfigKeys {
-  OPENAI_API_KEY = 'OPENAI_API_KEY',
   OPENAI_BASE_URL = 'OPENAI_BASE_URL',
   OPENAI_MODEL = 'OPENAI_MODEL',
   AZURE_API_VERSION = 'AZURE_API_VERSION',
@@ -22,47 +9,54 @@ export enum ConfigKeys {
   SYSTEM_PROMPT = 'AI_COMMIT_SYSTEM_PROMPT',
   OPENAI_TEMPERATURE = 'OPENAI_TEMPERATURE',
   DIFF_SOURCE = 'DIFF_SOURCE',
-
   SCM_INPUT_BEHAVIOR = 'SCM_INPUT_BEHAVIOR',
-
   REFERENCE_GIT_LOG = 'REFERENCE_GIT_LOG',
   GIT_LOG_COUNT = 'GIT_LOG_COUNT',
   GIT_LOG_AUTHOR_SCOPE = 'GIT_LOG_AUTHOR_SCOPE',
-  
-  GEMINI_API_KEY = 'GEMINI_API_KEY',
   GEMINI_BASE_URL = 'GEMINI_BASE_URL',
   GEMINI_MODEL = 'GEMINI_MODEL',
   GEMINI_TEMPERATURE = 'GEMINI_TEMPERATURE',
-  AI_PROVIDER = 'AI_PROVIDER',
+  AI_PROVIDER = 'AI_PROVIDER'
 }
 
-/**
- * Manages the configuration for the AI commit extension.
- */
+export enum SecretKeys {
+  OPENAI_API_KEY = 'ai-commit.openai-api-key',
+  GEMINI_API_KEY = 'ai-commit.gemini-api-key'
+}
+
+interface LegacySettingLocation {
+  config: vscode.WorkspaceConfiguration;
+  target: vscode.ConfigurationTarget;
+  value: string;
+}
+
 export class ConfigurationManager {
-  private static instance: ConfigurationManager;
-  private configCache: Map<string, any> = new Map();
+  private static instance: ConfigurationManager | undefined;
+  private configCache = new Map<string, unknown>();
   private disposable: vscode.Disposable;
-  private context: vscode.ExtensionContext;
 
-  private constructor(context: vscode.ExtensionContext) {
-    this.context = context;
+  private constructor(private context: vscode.ExtensionContext) {
     this.disposable = vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('ai-commit')) {
-        this.configCache.clear();
+      if (!event.affectsConfiguration('ai-commit')) {
+        return;
+      }
 
-        const aiProvider = this.getConfig<string>('AI_PROVIDER', 'openai');
-        if (aiProvider === 'openai' &&
-          (event.affectsConfiguration('ai-commit.OPENAI_BASE_URL') ||
-          event.affectsConfiguration('ai-commit.OPENAI_API_KEY'))) {
-          this.updateOpenAIModelList();
-        }
+      this.configCache.clear();
+      const aiProvider = this.getConfig<string>(ConfigKeys.AI_PROVIDER, 'openai');
+      if (
+        aiProvider === 'openai' &&
+        event.affectsConfiguration('ai-commit.OPENAI_BASE_URL')
+      ) {
+        void this.updateOpenAIModelList();
       }
     });
   }
 
   static getInstance(context?: vscode.ExtensionContext): ConfigurationManager {
-    if (!this.instance && context) {
+    if (!this.instance) {
+      if (!context) {
+        throw new Error('ConfigurationManager has not been initialized');
+      }
       this.instance = new ConfigurationManager(context);
     }
     return this.instance;
@@ -73,94 +67,145 @@ export class ConfigurationManager {
       const config = vscode.workspace.getConfiguration('ai-commit');
       this.configCache.set(key, config.get<T>(key, defaultValue));
     }
-    return this.configCache.get(key);
+    return this.configCache.get(key) as T;
+  }
+
+  getOpenAIApiKey(): Thenable<string | undefined> {
+    return this.context.secrets.get(SecretKeys.OPENAI_API_KEY);
+  }
+
+  getGeminiApiKey(): Thenable<string | undefined> {
+    return this.context.secrets.get(SecretKeys.GEMINI_API_KEY);
+  }
+
+  async setOpenAIApiKey(value: string): Promise<void> {
+    await this.context.secrets.store(SecretKeys.OPENAI_API_KEY, value);
+    await this.clearLegacySetting('OPENAI_API_KEY');
+    await this.context.globalState.update('availableOpenAIModels', undefined);
+  }
+
+  async setGeminiApiKey(value: string): Promise<void> {
+    await this.context.secrets.store(SecretKeys.GEMINI_API_KEY, value);
+    await this.clearLegacySetting('GEMINI_API_KEY');
+  }
+
+  async deleteOpenAIApiKey(): Promise<void> {
+    await this.context.secrets.delete(SecretKeys.OPENAI_API_KEY);
+    await this.clearLegacySetting('OPENAI_API_KEY');
+  }
+
+  async deleteGeminiApiKey(): Promise<void> {
+    await this.context.secrets.delete(SecretKeys.GEMINI_API_KEY);
+    await this.clearLegacySetting('GEMINI_API_KEY');
+  }
+
+  async migrateLegacyApiKeys(): Promise<string[]> {
+    const conflicts: string[] = [];
+
+    if (await this.migrateLegacyApiKey('OPENAI_API_KEY', SecretKeys.OPENAI_API_KEY)) {
+      conflicts.push('OpenAI');
+    }
+
+    if (await this.migrateLegacyApiKey('GEMINI_API_KEY', SecretKeys.GEMINI_API_KEY)) {
+      conflicts.push('Gemini');
+    }
+
+    return conflicts;
   }
 
   dispose() {
     this.disposable.dispose();
   }
 
-  /**
-   * Updates the list of available OpenAI models.
-   */
-  private async updateOpenAIModelList() {
-    try {
-      const openai = createOpenAIApi();
-      const models = await openai.models.list();
+  private async migrateLegacyApiKey(
+    settingKey: string,
+    secretKey: SecretKeys
+  ): Promise<boolean> {
+    const locations = this.getLegacySettingLocations(settingKey);
+    if (locations.length === 0) {
+      return false;
+    }
 
-      // Save available models to extension state
-      await this.context.globalState.update('availableOpenAIModels', models.data.map(model => model.id));
+    let storedValue = await this.context.secrets.get(secretKey);
+    const configuredValues = new Set(locations.map(({ value }) => value));
 
-      // Get the current selected model
-      const config = vscode.workspace.getConfiguration('ai-commit');
-      const currentModel = config.get<string>('OPENAI_MODEL');
+    if (!storedValue && configuredValues.size === 1) {
+      storedValue = locations[0].value;
+      await this.context.secrets.store(secretKey, storedValue);
+    }
 
-      // If the current selected model is not in the available list, set it to the default value
-      const availableModels = models.data.map(model => model.id);
-      if (!availableModels.includes(currentModel)) {
-        await config.update('OPENAI_MODEL', 'gpt-5-mini', vscode.ConfigurationTarget.Global);
+    if (!storedValue) {
+      return true;
+    }
+
+    const matchingLocations = locations.filter(({ value }) => value === storedValue);
+    for (const { config, target } of matchingLocations) {
+      await config.update(settingKey, undefined, target);
+    }
+
+    return matchingLocations.length !== locations.length;
+  }
+
+  private async clearLegacySetting(settingKey: string): Promise<void> {
+    for (const { config, target } of this.getLegacySettingLocations(settingKey)) {
+      await config.update(settingKey, undefined, target);
+    }
+  }
+
+  private getLegacySettingLocations(settingKey: string): LegacySettingLocation[] {
+    const locations: LegacySettingLocation[] = [];
+    const config = vscode.workspace.getConfiguration('ai-commit');
+    const inspected = config.inspect<string>(settingKey);
+
+    if (inspected?.globalValue) {
+      locations.push({
+        config,
+        target: vscode.ConfigurationTarget.Global,
+        value: inspected.globalValue
+      });
+    }
+
+    if (inspected?.workspaceValue) {
+      locations.push({
+        config,
+        target: vscode.ConfigurationTarget.Workspace,
+        value: inspected.workspaceValue
+      });
+    }
+
+    for (const folder of vscode.workspace.workspaceFolders ?? []) {
+      const folderConfig = vscode.workspace.getConfiguration('ai-commit', folder.uri);
+      const folderValue =
+        folderConfig.inspect<string>(settingKey)?.workspaceFolderValue;
+      if (folderValue) {
+        locations.push({
+          config: folderConfig,
+          target: vscode.ConfigurationTarget.WorkspaceFolder,
+          value: folderValue
+        });
       }
+    }
+
+    return locations;
+  }
+
+  private async updateOpenAIModelList(): Promise<void> {
+    try {
+      const openai = await createOpenAIApi();
+      const models = await openai.models.list();
+      await this.context.globalState.update(
+        'availableOpenAIModels',
+        models.data.map((model) => model.id)
+      );
     } catch (error) {
       console.error('Failed to fetch OpenAI models:', error);
     }
   }
 
-  /**
-   * Retrieves the list of available OpenAI models.
-   * @returns {Promise<string[]>} The list of available OpenAI models.
-   */
-  public async getAvailableOpenAIModels(): Promise<string[]> {
+  async getAvailableOpenAIModels(): Promise<string[]> {
     if (!this.context.globalState.get<string[]>('availableOpenAIModels')) {
       await this.updateOpenAIModelList();
     }
     return this.context.globalState.get<string[]>('availableOpenAIModels', []);
   }
-
-  /**
-   * @deprecated
-   * This function is deprecated because Gemini API does not currently support listing models via API.
-   * We have to wait for this feature to be updated to the gemini library at some point, or find another way.
-   * 
-   * Updates the list of available Gemini models.
-   */
-  /*
-  private async updateGeminiModelList() {
-    try {
-      const geminiAPI = createGeminiAPIClient();
-      const modelListResponse = await geminiAPI.listModels(); // Gemini API does not currently have a function to get a list of models
-      const availableModels = modelListResponse.models.map(model => model.name);
-
-      // Save available Gemini models to extension global state
-      await this.context.globalState.update('availableGeminiModels', availableModels);
-
-      // Get the currently selected Gemini model
-      const config = vscode.workspace.getConfiguration('ai-commit');
-      const currentModel = config.get<string>('GEMINI_MODEL');
-
-      // If the current selected Gemini model is not in the available list, set it to a default value
-      if (currentModel && !availableModels.includes(currentModel)) {
-        await config.update('GEMINI_MODEL', 'gemini-2.0-flash-001', vscode.ConfigurationTarget.Global);
-      }
-
-    } catch (error) {
-      console.error('Failed to fetch Gemini models:', error);
-    }
-  }
-  */
-
-  /**
-   * @deprecated
-   * This function is deprecated because Gemini API does not currently support listing models via API.
-   * 
-   * Retrieves the list of available Gemini models.
-   * @returns {Promise<string[]>} The list of available Gemini models.
-   */
-  /*
-  public async getAvailableGeminiModels(): Promise<string[]> {
-    if (!this.context.globalState.get<string[]>('availableGeminiModels')) {
-      await this.updateGeminiModelList();
-    }
-    return this.context.globalState.get<string[]>('availableGeminiModels', []);
-  }
-  */
 }

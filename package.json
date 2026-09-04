@@ -2,10 +2,10 @@
   "name": "nota-ai-commit-lainbo",
   "displayName": "Nota AI Commit",
   "description": "Use Azure/OpenAI/Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
-  "version": "0.1.17",
+  "version": "0.1.20",
   "engines": {
-    "node": ">=16",
-    "vscode": "^1.77.0"
+    "node": ">=20",
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
@@ -29,7 +29,11 @@
   "icon": "images/logo.png",
   "activationEvents": [
     "onCommand:extension.ai-commit",
-    "onCommand:ai-commit.showAvailableModels"
+    "onCommand:ai-commit.showAvailableModels",
+    "onCommand:ai-commit.setOpenAIApiKey",
+    "onCommand:ai-commit.setGeminiApiKey",
+    "onCommand:ai-commit.clearOpenAIApiKey",
+    "onCommand:ai-commit.clearGeminiApiKey"
   ],
   "contributes": {
     "commands": [
@@ -41,6 +45,28 @@
       {
         "command": "ai-commit.showAvailableModels",
         "title": "%aiCommit.command.showAvailableModels.title%"
+      },
+      {
+        "command": "ai-commit.setOpenAIApiKey",
+        "title": "%aiCommit.command.setOpenAIApiKey.title%"
+      },
+      {
+        "command": "ai-commit.setGeminiApiKey",
+        "title": "%aiCommit.command.setGeminiApiKey.title%"
+      },
+      {
+        "command": "ai-commit.clearOpenAIApiKey",
+        "title": "%aiCommit.command.clearOpenAIApiKey.title%"
+      },
+      {
+        "command": "ai-commit.clearGeminiApiKey",
+        "title": "%aiCommit.command.clearGeminiApiKey.title%"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "ai-commit.apiKeyMenu",
+        "label": "%aiCommit.menu.apiKeys.label%"
       }
     ],
     "configuration": [
@@ -167,14 +193,9 @@
       {
         "title": "%aiCommit.configuration.openai.title%",
         "properties": {
-          "ai-commit.OPENAI_API_KEY": {
-            "default": "",
-            "description": "%aiCommit.config.openaiApiKey.description%",
-            "type": "string"
-          },
           "ai-commit.OPENAI_BASE_URL": {
             "default": "",
-            "description": "%aiCommit.config.openaiBaseUrl.description%",
+            "markdownDescription": "%aiCommit.config.openaiBaseUrl.description%",
             "type": "string"
           },
           "ai-commit.AZURE_API_VERSION": {
@@ -189,7 +210,6 @@
           },
           "ai-commit.OPENAI_TEMPERATURE": {
             "type": "number",
-            "default": 0.7,
             "minimum": 0,
             "maximum": 2,
             "description": "%aiCommit.config.openaiTemperature.description%"
@@ -199,19 +219,14 @@
       {
         "title": "%aiCommit.configuration.gemini.title%",
         "properties": {
-          "ai-commit.GEMINI_API_KEY": {
-            "type": "string",
-            "default": "",
-            "description": "%aiCommit.config.geminiApiKey.description%"
-          },
           "ai-commit.GEMINI_BASE_URL": {
             "type": "string",
             "default": "",
-            "description": "%aiCommit.config.geminiBaseUrl.description%"
+            "markdownDescription": "%aiCommit.config.geminiBaseUrl.description%"
           },
           "ai-commit.GEMINI_MODEL": {
             "type": "string",
-            "default": "gemini-2.0-flash-001",
+            "default": "gemini-3.8-flash",
             "description": "%aiCommit.config.geminiModel.description%"
           },
           "ai-commit.GEMINI_TEMPERATURE": {
@@ -225,6 +240,23 @@
       }
     ],
     "menus": {
+      "extension/context": [
+        {
+          "submenu": "ai-commit.apiKeyMenu",
+          "when": "extension == lainbo.nota-ai-commit-lainbo",
+          "group": "2_configure"
+        }
+      ],
+      "ai-commit.apiKeyMenu": [
+        {
+          "command": "ai-commit.setOpenAIApiKey",
+          "group": "1_set@1"
+        },
+        {
+          "command": "ai-commit.setGeminiApiKey",
+          "group": "1_set@2"
+        }
+      ],
       "scm/title": [
         {
           "command": "extension.ai-commit",
@@ -237,30 +269,20 @@
   "scripts": {
     "build": "webpack --mode production --devtool hidden-source-map",
     "compile": "webpack",
-    "compile-tests": "tsc -p . --outDir out",
     "format": "prettier --write \"src/**/*.ts\" \"*.json\" \".vscode/*.json\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"*.json\" \".vscode/*.json\"",
     "lint": "eslint src --ext ts",
     "package": "vsce package --no-dependencies",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "publish": "vsce publish --no-dependencies",
-    "test": "node ./out/test/runTest.js",
     "vscode:prepublish": "npm run build",
-    "watch": "webpack --watch",
-    "watch-tests": "tsc -p . -w --outDir out"
+    "watch": "webpack --watch"
   },
   "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
-    "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.77.0",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
-    "@vscode/test-electron": "^2.3.0",
     "eslint": "^8.36.0",
-    "glob": "^8.1.0",
-    "mocha": "^10.2.0",
     "prettier": "^3.7.4",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
@@ -268,13 +290,12 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
-    "fs-extra": "^11.0.4",
+    "@google/genai": "^2.21.0",
     "openai": "^4.14.2",
-    "simple-git": "^3.17.0"
+    "simple-git": "^3.36.0"
   },
   "resolutions": {
-    "@types/node": "16.x"
+    "@types/node": "20.x"
   },
   "license": "MIT"
 }
