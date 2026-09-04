@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { getHttpStatus } from './http';
 
 const OUTPUT_CHANNEL_NAME = 'Nota AI Commit';
 
@@ -16,10 +17,6 @@ export function getOutputChannel(): vscode.OutputChannel {
     outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
   }
   return outputChannel;
-}
-
-export function showOutput(preserveFocus = true) {
-  getOutputChannel().show(preserveFocus);
 }
 
 export function logSection(title: string) {
@@ -47,7 +44,7 @@ export function logError(error: unknown, contextMessage?: string) {
 
 function formatError(error: unknown): string {
   if (error instanceof Error) {
-    const status = extractHttpStatus(error as any);
+    const status = getHttpStatus(error);
     const pieces = [
       `${error.name}: ${error.message}${status ? ` (status=${status})` : ''}`
     ];
@@ -66,12 +63,4 @@ function formatError(error: unknown): string {
   } catch {
     return String(error);
   }
-}
-
-function extractHttpStatus(error: any): number | undefined {
-  const status = error?.status ?? error?.response?.status;
-  if (typeof status === 'number') {
-    return status;
-  }
-  return undefined;
 }

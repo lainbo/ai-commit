@@ -1,84 +1,27 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { ChatCompletionMessageParam } from 'openai/resources';
 import * as vscode from 'vscode';
-import { ConfigKeys, ConfigurationManager } from './config';
+import { ConfigKeys, getConfig, getOptionalConfig } from './config';
 import {
-  getDiffStaged,
-  getDiffUnstaged,
-  getUntrackedDiff,
+  DiffSource,
   getGitLogOneline,
+  getRepo,
+  getSelectedDiff,
   GitLogAuthorScope
-} from './git-utils';
-import { ChatGPTAPI, getOpenAIChatCompletionsRequestUrl } from './openai-utils';
-import { getMainCommitPrompt } from './prompts';
-import { ProgressHandler } from './utils';
-import { GeminiAPI, getGeminiGenerateContentRequestUrl } from './gemini-utils';
+} from './git';
+import { completeGemini, getGeminiGenerateContentRequestUrl } from './gemini';
+import { ChatMessage, getHttpStatus, mapProviderHttpError } from './http';
+import { completeOpenAI, getOpenAIChatCompletionsRequestUrl } from './openai';
 import { getOutputChannel, logError, logInfo, logSection } from './output';
+import { getMainCommitPrompt } from './prompts';
 
-type DiffSource = 'auto' | 'staged' | 'unstaged' | 'staged+unstaged';
-type DiffResult = { diff: string; error?: string };
-
-function getDiffOrThrow(result: DiffResult, label: string): string {
-  if (result.error) {
-    throw new Error(`Failed to get ${label} changes: ${result.error}`);
-  }
-  return result.diff.trim();
-}
-
-async function getWorkingTreeDiff(repo: any): Promise<string> {
-  const [unstagedResult, untrackedResult] = await Promise.all([
-    getDiffUnstaged(repo),
-    getUntrackedDiff(repo)
-  ]);
-  const unstagedDiff = getDiffOrThrow(unstagedResult, 'unstaged');
-  const untrackedDiff = getDiffOrThrow(untrackedResult, 'untracked');
-  return [unstagedDiff, untrackedDiff].filter(Boolean).join('\n');
-}
-
-async function getSelectedDiff(repo: any, diffSource: DiffSource): Promise<string> {
-  if (diffSource === 'staged') {
-    return getDiffOrThrow(await getDiffStaged(repo), 'staged');
-  }
-
-  if (diffSource === 'unstaged') {
-    return getWorkingTreeDiff(repo);
-  }
-
-  if (diffSource === 'staged+unstaged') {
-    const [stagedDiff, workingTreeDiff] = await Promise.all([
-      getDiffStaged(repo).then((result) => getDiffOrThrow(result, 'staged')),
-      getWorkingTreeDiff(repo)
-    ]);
-    return [
-      stagedDiff ? `--- STAGED ---\n${stagedDiff}` : '',
-      workingTreeDiff ? `--- UNSTAGED ---\n${workingTreeDiff}` : ''
-    ]
-      .filter(Boolean)
-      .join('\n\n');
-  }
-
-  const stagedDiff = getDiffOrThrow(await getDiffStaged(repo), 'staged');
-  return stagedDiff || getWorkingTreeDiff(repo);
-}
-
-/**
- * Generates a chat completion prompt for the commit message based on the provided diff.
- *
- * @param {string} diff - The diff string representing changes to be committed.
- * @param {string} additionalContext - Additional context for the changes.
- * @returns {Promise<Array<{ role: string, content: string }>>} - A promise that resolves to an array of messages for the chat completion.
- */
-const generateCommitMessageChatCompletionPrompt = async (
+function buildCommitMessages(
   diff: string,
   additionalContext?: string,
   gitLogContext?: string
-) => {
-  const INIT_MESSAGES_PROMPT = await getMainCommitPrompt();
-  const chatContextAsCompletionRequest = [...INIT_MESSAGES_PROMPT];
+): ChatMessage[] {
+  const messages: ChatMessage[] = [...getMainCommitPrompt()];
 
   if (additionalContext) {
-    chatContextAsCompletionRequest.push({
+    messages.push({
       role: 'system',
       content:
         `Priority rule:\n` +
@@ -87,7 +30,7 @@ const generateCommitMessageChatCompletionPrompt = async (
         `- Still output ONLY the commit message and follow the configured language.\n` +
         `- Do not mention this rule in the output.`
     });
-    chatContextAsCompletionRequest.push({
+    messages.push({
       role: 'user',
       content:
         `The user entered the following content in the Source Control commit message input box.\n` +
@@ -103,99 +46,33 @@ const generateCommitMessageChatCompletionPrompt = async (
   }
 
   if (gitLogContext) {
-    chatContextAsCompletionRequest.push({
+    messages.push({
       role: 'user',
       content: `Recent git commit history (git log --oneline). Use it only as style/reference, do not copy blindly:\n${gitLogContext}`
     });
   }
 
-  chatContextAsCompletionRequest.push({
+  messages.push({
     role: 'user',
     content: diff
   });
-  return chatContextAsCompletionRequest;
-};
-
-/**
- * Retrieves the repository associated with the provided argument.
- *
- * @param {any} arg - The input argument containing the root URI of the repository.
- * @returns {Promise<vscode.SourceControlRepository>} - A promise that resolves to the repository object.
- */
-export async function getRepo(arg) {
-  const gitApi = vscode.extensions.getExtension('vscode.git')?.exports.getAPI(1);
-  if (!gitApi) {
-    throw new Error('Git extension not found');
-  }
-
-  const repositories = gitApi.repositories;
-  if (repositories.length === 0) {
-    throw new Error('No Git repository found');
-  }
-
-  if (typeof arg !== 'object' || !arg.rootUri) {
-    return repositories[0];
-  }
-
-  const resourcePath = getCanonicalPath(arg.rootUri.fsPath);
-  const repositoryPaths = repositories.map((repo) => ({
-    repo,
-    rootPath: getCanonicalPath(repo.rootUri.fsPath)
-  }));
-  const exactMatch = repositoryPaths.find(({ rootPath }) => rootPath === resourcePath);
-  if (exactMatch) {
-    return exactMatch.repo;
-  }
-
-  const containingMatch = repositoryPaths
-    .filter(({ rootPath }) => isPathInside(rootPath, resourcePath))
-    .sort((a, b) => b.rootPath.length - a.rootPath.length)[0];
-  return containingMatch?.repo ?? repositories[0];
+  return messages;
 }
 
-function getCanonicalPath(filePath: string): string {
-  try {
-    return path.normalize(fs.realpathSync(filePath));
-  } catch {
-    return path.resolve(filePath);
-  }
-}
-
-function isPathInside(rootPath: string, filePath: string): boolean {
-  const relativePath = path.relative(rootPath, filePath);
-  return (
-    relativePath === '' ||
-    (relativePath !== '..' &&
-      !relativePath.startsWith(`..${path.sep}`) &&
-      !path.isAbsolute(relativePath))
-  );
-}
-
-/**
- * Generates a commit message based on the changes staged in the repository.
- *
- * @param {any} arg - The input argument containing the root URI of the repository.
- * @returns {Promise<void>} - A promise that resolves when the commit message has been generated and set in the SCM input box.
- */
-export async function generateCommitMsg(arg) {
-  return ProgressHandler.withProgress('', async (progress) => {
-    try {
+export async function generateCommitMsg(arg: unknown): Promise<void> {
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: '[Nota AI Commit]',
+      cancellable: false
+    },
+    async (progress) => {
       logSection('开始生成提交信息');
-      const configManager = ConfigurationManager.getInstance();
       const repo = await getRepo(arg);
 
-      const aiProvider = configManager.getConfig<string>(
-        ConfigKeys.AI_PROVIDER,
-        'openai'
-      );
-      const diffSource = configManager.getConfig<DiffSource>(
-        ConfigKeys.DIFF_SOURCE,
-        'auto'
-      );
-      const scmInputBehavior = configManager.getConfig<string>(
-        ConfigKeys.SCM_INPUT_BEHAVIOR,
-        'ignore'
-      );
+      const aiProvider = getConfig(ConfigKeys.AI_PROVIDER, 'openai');
+      const diffSource = getConfig(ConfigKeys.DIFF_SOURCE, 'auto') as DiffSource;
+      const scmInputBehavior = getConfig(ConfigKeys.SCM_INPUT_BEHAVIOR, 'ignore');
       logInfo(`AI Provider: ${aiProvider}`);
       logInfo(`Diff Source: ${diffSource}`);
       logInfo(`SCM Input Behavior: ${scmInputBehavior}`);
@@ -218,43 +95,30 @@ export async function generateCommitMsg(arg) {
       }
 
       const scmInputBox = repo.inputBox;
-      if (!scmInputBox) {
-        throw new Error('Unable to find the SCM input box');
-      }
-
       const scmInputText = scmInputBox.value.trim();
       const additionalContext =
         scmInputBehavior === 'context' ? scmInputText : undefined;
-      const shouldReferenceGitLog = configManager.getConfig<boolean>(
-        ConfigKeys.REFERENCE_GIT_LOG,
-        true
-      );
+      const shouldReferenceGitLog = getConfig(ConfigKeys.REFERENCE_GIT_LOG, true);
 
       let gitLogContext: string | undefined;
       if (shouldReferenceGitLog) {
         progress.report({ message: 'Reading git commit history...' });
 
-        const gitLogCount = configManager.getConfig<number>(
-          ConfigKeys.GIT_LOG_COUNT,
-          20
-        );
-        const gitLogAuthorScope = configManager.getConfig<GitLogAuthorScope>(
+        const gitLogCount = getConfig(ConfigKeys.GIT_LOG_COUNT, 20);
+        const gitLogAuthorScope = getConfig(
           ConfigKeys.GIT_LOG_AUTHOR_SCOPE,
           'all'
-        );
+        ) as GitLogAuthorScope;
 
         logInfo(
           `读取 git log --oneline：maxCount=${gitLogCount}, authorScope=${gitLogAuthorScope}`
         );
-        const logResult = await getGitLogOneline(repo, {
+        gitLogContext = await getGitLogOneline(repo, {
           maxCount: gitLogCount,
           authorScope: gitLogAuthorScope
         });
 
-        if (logResult.error) {
-          logError(new Error(logResult.error), '读取 git log 失败');
-        } else if (logResult.log.trim()) {
-          gitLogContext = logResult.log.trim();
+        if (gitLogContext) {
           const actualCount = gitLogContext.split(/\r?\n/).filter(Boolean).length;
           logInfo(`最近提交记录（实际返回 ${actualCount} 条）：`);
           getOutputChannel().appendLine(gitLogContext);
@@ -269,7 +133,7 @@ export async function generateCommitMsg(arg) {
           ? 'Analyzing changes with additional context...'
           : 'Analyzing changes...'
       });
-      const messages = await generateCommitMessageChatCompletionPrompt(
+      const messages = buildCommitMessages(
         selectedDiff,
         additionalContext,
         gitLogContext
@@ -280,130 +144,36 @@ export async function generateCommitMsg(arg) {
           ? 'Generating commit message with additional context...'
           : 'Generating commit message...'
       });
-      try {
-        let commitMessage: string | undefined;
 
-        if (aiProvider === 'gemini') {
-          const geminiApiKey = await configManager.getGeminiApiKey();
-          if (!geminiApiKey) {
-            throw new Error(
-              'Gemini API Key not configured. Run "Nota AI Commit: Set Gemini API Key".'
-            );
-          }
-          const modelName = configManager.getConfig<string>(ConfigKeys.GEMINI_MODEL);
-          const baseUrl = configManager.getConfig<string>(ConfigKeys.GEMINI_BASE_URL);
+      const provider = aiProvider === 'gemini' ? 'gemini' : 'openai';
+      try {
+        let commitMessage: string;
+        if (provider === 'gemini') {
+          const modelName = getConfig(ConfigKeys.GEMINI_MODEL, 'gemini-3.8-flash');
+          const baseUrl = getOptionalConfig<string>(ConfigKeys.GEMINI_BASE_URL);
           logInfo(
             `Gemini Request URL: ${getGeminiGenerateContentRequestUrl(modelName, baseUrl)}`
           );
-          commitMessage = await GeminiAPI(messages);
+          commitMessage = await completeGemini(messages);
         } else {
-          const openaiApiKey = await configManager.getOpenAIApiKey();
-          if (!openaiApiKey) {
-            throw new Error(
-              'OpenAI API Key not configured. Run "Nota AI Commit: Set OpenAI API Key".'
-            );
-          }
-          const baseURL = configManager.getConfig<string>(ConfigKeys.OPENAI_BASE_URL);
-          const apiVersion = configManager.getConfig<string>(
-            ConfigKeys.AZURE_API_VERSION
-          );
+          const baseURL = getOptionalConfig<string>(ConfigKeys.OPENAI_BASE_URL);
+          const apiVersion = getOptionalConfig<string>(ConfigKeys.AZURE_API_VERSION);
           logInfo(
             `OpenAI Request URL: ${getOpenAIChatCompletionsRequestUrl(baseURL, apiVersion)}`
           );
-          commitMessage = await ChatGPTAPI(messages as ChatCompletionMessageParam[]);
+          commitMessage = await completeOpenAI(messages);
         }
 
-        if (commitMessage) {
-          scmInputBox.value = commitMessage;
-          logSection('AI 返回结果');
-          getOutputChannel().appendLine(commitMessage);
-        } else {
-          throw new Error('Failed to generate commit message');
-        }
+        scmInputBox.value = commitMessage;
+        logSection('AI 返回结果');
+        getOutputChannel().appendLine(commitMessage);
       } catch (err) {
-        logError(err, `AI 请求失败（provider=${aiProvider}）`);
-        let errorMessage = 'An unexpected error occurred';
-
-        const status = (err as any)?.status ?? (err as any)?.response?.status;
-        if (aiProvider === 'openai') {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (typeof status === 'number') {
-            switch (status) {
-              case 401:
-                errorMessage = 'Invalid OpenAI API key or unauthorized access';
-                break;
-              case 400:
-                if (
-                  /Invalid JSON payload received/i.test(msg) &&
-                  /Unknown name "\\s*messages\\s*"/i.test(msg)
-                ) {
-                  errorMessage =
-                    'OpenAI 请求返回了 Google/Gemini 风格的 400（不认识 messages/temperature）。' +
-                    '这通常意味着你把 ai-commit.OPENAI_BASE_URL 配成了 Gemini/Google 的接口，或使用了非 OpenAI 兼容的代理。' +
-                    '请检查：1) ai-commit.AI_PROVIDER 是否应切换为 gemini；2) OPENAI_BASE_URL 是否为 OpenAI 风格的 /v1（不要包含 /chat/completions，也不要是 googleapis.com）。';
-                } else {
-                  errorMessage = `OpenAI Bad Request (400): ${msg}`;
-                }
-                break;
-              case 404:
-                errorMessage =
-                  'OpenAI endpoint not found (404). Please check OPENAI_BASE_URL (should end with /v1, do not include /chat/completions).';
-                break;
-              case 429:
-                errorMessage = 'Rate limit exceeded. Please try again later';
-                break;
-              case 500:
-                errorMessage = 'OpenAI server error. Please try again later';
-                break;
-              case 503:
-                errorMessage = 'OpenAI service is temporarily unavailable';
-                break;
-              default:
-                errorMessage = `OpenAI API error (status ${status}): ${msg}`;
-                break;
-            }
-          } else {
-            errorMessage = `OpenAI API error: ${msg}`;
-          }
-        } else if (aiProvider === 'gemini') {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (typeof status === 'number') {
-            switch (status) {
-              case 400:
-                errorMessage = `Gemini Bad Request (400): ${msg}`;
-                break;
-              case 401:
-              case 403:
-                errorMessage =
-                  'Invalid Gemini API key or unauthorized access. Run "Nota AI Commit: Set Gemini API Key" to update it.';
-                break;
-              case 404:
-                errorMessage =
-                  'Gemini endpoint not found (404). Please check ai-commit.GEMINI_BASE_URL and ai-commit.GEMINI_MODEL.';
-                break;
-              case 429:
-                errorMessage = 'Gemini rate limit exceeded. Please try again later.';
-                break;
-              case 500:
-                errorMessage = 'Gemini server error. Please try again later.';
-                break;
-              case 503:
-                errorMessage = 'Gemini service is temporarily unavailable.';
-                break;
-              default:
-                errorMessage = `Gemini API error (status ${status}): ${msg}`;
-                break;
-            }
-          } else {
-            errorMessage = `Gemini API error: ${msg}`;
-          }
+        logError(err, `AI 请求失败（provider=${provider}）`);
+        if (getHttpStatus(err) !== undefined) {
+          throw mapProviderHttpError(provider, err);
         }
-
-        throw new Error(errorMessage);
+        throw err instanceof Error ? err : new Error(String(err));
       }
-    } catch (error) {
-      logError(error, '生成提交信息失败');
-      throw error;
     }
-  });
+  );
 }
