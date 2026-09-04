@@ -6,7 +6,7 @@
 
 <h1>Nota AI Commit</h1>
 
-Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.
+Nota AI Commit is a VS Code extension that uses OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review Git changes, generate commit messages that follow Conventional Commits, and simplify the commit process.
 
 **English** · [简体中文](./README.zh_CN.md) · [Marketplace][vscode-marketplace-link] · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
 
@@ -21,15 +21,10 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generat
 - 😜 Support adding Gitmoji.
 - 🛠️ Support custom system prompt.
 - 📝 Support Conventional Commits specification.
-
----
-
-**This project is forked from [sitoi/ai-commit](https://github.com/sitoi/ai-commit) with the following enhancements:**
-
 - ✅ Allow generating commit messages even when there are no staged changes (default behavior: prefer staged diff, fallback to unstaged diff)
-- ✅ Add `ai-commit.DIFF_SOURCE` setting to control which git changes are used (`auto` / `staged` / `unstaged` / `staged+unstaged`)
-- ✅ Add `ai-commit.SCM_INPUT_BEHAVIOR` setting to control whether to send the SCM input box content as AI context (`context` / `ignore`)
-- ✅ Add `ai-commit.REFERENCE_GIT_LOG` setting to provide recent `git log --oneline` history as model context
+- ✅ Configure which git changes are used with `ai-commit.DIFF_SOURCE` (`auto` / `staged` / `unstaged` / `staged+unstaged`)
+- ✅ Configure whether to send the SCM input box content as AI context with `ai-commit.SCM_INPUT_BEHAVIOR` (`context` / `ignore`)
+- ✅ Include recent `git log --oneline` history as model context with `ai-commit.REFERENCE_GIT_LOG`
 - ✅ Supports Custom Endpoint URLs for Gemini
 
 ## 📦 Installation

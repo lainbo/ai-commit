@@ -6,7 +6,7 @@
 
 <h1>Nota AI Commit</h1>
 
-使用 OpenAI / Azure OpenAI / DeepSeek / Gemini API 审查 Git 变更，生成符合 Conventional Commits 规范的提交消息，简化提交流程，并保持提交规范一致。
+Nota AI Commit 是一款 VS Code 扩展，使用 OpenAI / Azure OpenAI / DeepSeek / Gemini API 审查 Git 变更，生成符合 Conventional Commits 规范的提交消息，简化提交流程，并保持提交规范一致。
 
 [English](./README.md) · **简体中文** · [插件市场][vscode-marketplace-link] · [报告问题][github-issues-link] · [请求功能][github-issues-link]
 
@@ -21,15 +21,10 @@
 - 😜 支持添加 Gitmoji。
 - 🛠️ 支持自定义系统提示词。
 - 📝 支持 Conventional Commits 规范。
-
----
-
-**本项目 Fork 自 [sitoi/ai-commit](https://github.com/sitoi/ai-commit)，并新增以下功能：**
-
 - ✅ 即使没有暂存变更也允许生成提交信息（默认：优先使用暂存区 diff；若为空则回退到未暂存 diff）
-- ✅ 新增配置 `ai-commit.DIFF_SOURCE` 用于控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
-- ✅ 新增配置 `ai-commit.SCM_INPUT_BEHAVIOR` 用于控制是否将源代码管理输入框内容作为 AI 上下文发送（`context` / `ignore`）
-- ✅ 新增配置 `ai-commit.REFERENCE_GIT_LOG`，可把最近的 `git log --oneline` 提交历史作为模型参考上下文
+- ✅ 通过配置 `ai-commit.DIFF_SOURCE` 控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
+- ✅ 通过配置 `ai-commit.SCM_INPUT_BEHAVIOR` 控制是否将源代码管理输入框内容作为 AI 上下文发送（`context` / `ignore`）
+- ✅ 通过配置 `ai-commit.REFERENCE_GIT_LOG`，可把最近的 `git log --oneline` 提交历史作为模型参考上下文
 - ✅ 支持 Gemini 自定义 Endpoint URL
 
 ## 📦 安装
