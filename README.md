@@ -65,11 +65,11 @@ In the VSCode settings, locate the "ai-commit" configuration options and configu
 | GIT_LOG_COUNT      | number |          20          |    No    |                           How many recent commits to include (1-50).                           |
 | GIT_LOG_AUTHOR_SCOPE | string |         all        |    No    |                      Which authors to include: `all` or `self` (uses `git config user.name`).                      |
 | AI_PROVIDER        | string |        openai        |   Yes    |                                     Select AI Provider: `openai` or `gemini`.                                      |
-| OPENAI_BASE_URL    | string |         None         |    No    |                If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                 |
+| OPENAI_BASE_URL    | string | `https://api.openai.com/v1` |    No    |                If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                 |
 | OPENAI_MODEL       | string |      gpt-5-mini      |   Yes    |      OpenAI MODEL, you can select a model from the list by running the `Show Available OpenAI Models` command      |
 | AZURE_API_VERSION  | string |         None         |    No    |                                                 AZURE_API_VERSION                                                  |
 | OPENAI_TEMPERATURE | number |       Not set        |    No    | Optional sampling temperature (0-2). Omitted by default and ignored for GPT-5 and o-series reasoning models. |
-| GEMINI_BASE_URL    | string |         None         |    No    |         Gemini Base URL (optional). Use a third-party provider endpoint if needed; otherwise leave empty.          |
+| GEMINI_BASE_URL    | string | `https://generativelanguage.googleapis.com` |    No    | Gemini Base URL. Uses the official endpoint by default; change it when using a proxy or third-party provider. |
 | GEMINI_MODEL       | string |  gemini-3.8-flash    |   Yes    |                       Gemini MODEL. Currently, model selection is limited to configuration.                        |
 | GEMINI_TEMPERATURE | number |         0.7          |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative |
 | AI_COMMIT_LANGUAGE | string |       English        |   Yes    |                                               Supports 19 languages                                                |

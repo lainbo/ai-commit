@@ -194,7 +194,7 @@
         "title": "%aiCommit.configuration.openai.title%",
         "properties": {
           "ai-commit.OPENAI_BASE_URL": {
-            "default": "",
+            "default": "https://api.openai.com/v1",
             "markdownDescription": "%aiCommit.config.openaiBaseUrl.description%",
             "type": "string"
           },
@@ -221,7 +221,7 @@
         "properties": {
           "ai-commit.GEMINI_BASE_URL": {
             "type": "string",
-            "default": "",
+            "default": "https://generativelanguage.googleapis.com",
             "markdownDescription": "%aiCommit.config.geminiBaseUrl.description%"
           },
           "ai-commit.GEMINI_MODEL": {

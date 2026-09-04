@@ -18,7 +18,7 @@
   "aiCommit.config.gitLogAuthorScope.enum.self": "仅自己（git config user.name）",
   "aiCommit.config.commitLanguage.description": "提交信息语言",
   "aiCommit.config.azureApiVersion.description": "Azure OpenAI API 版本（api-version），非 Azure 供应商请留空",
-  "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL（可选）。请以 `/v1` 结尾，例如 `https://api.openai.com/v1`。使用 Azure OpenAI 时填写 deployments 地址，并配置 `ai-commit.AZURE_API_VERSION`。\n\n点此 ➡️ [设置 OpenAI API Key](command:ai-commit.setOpenAIApiKey)。Key 将安全保存在 VS Code SecretStorage 中。",
+  "aiCommit.config.openaiBaseUrl.description": "OpenAI Base URL，默认使用官方接口地址。使用 Azure OpenAI 时填写 deployments 地址，并配置 `ai-commit.AZURE_API_VERSION`。\n\n点此 ➡️ [设置 OpenAI API Key](command:ai-commit.setOpenAIApiKey)。Key 将安全保存在 VS Code SecretStorage 中。",
   "aiCommit.config.openaiModel.description": "OpenAI 模型。可运行“显示可用的 OpenAI 模型”从列表中选择。",
   "aiCommit.config.systemPrompt.description": "用于生成提交信息的自定义 system prompt",
   "aiCommit.config.scmInputBehavior.description": "AI生成时，如何处理提交信息输入框的内容。",
@@ -26,7 +26,7 @@
   "aiCommit.config.scmInputBehavior.enum.context": "把输入框内容作为额外上下文/约束（例如你想要让 AI 生成的提交信息中包含 Bug ID，则可以先在输入框中输入 Bug ID ，AI 会根据输入的信息生成内容）",
   "aiCommit.config.openaiTemperature.description": "可选的 OpenAI temperature（0-2）。默认不发送；GPT-5 和 o 系列推理模型会忽略此配置。",
   "aiCommit.config.aiProvider.description": "AI 提供方（OpenAI 或 Gemini）。",
-  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL（可选）。留空则使用官方接口地址；如使用代理/第三方供应商，只填写服务的 Base URL（不要填写具体的 endpoint 路径）。\n\n点此 ➡️ [设置 Gemini API Key](command:ai-commit.setGeminiApiKey)。Key 将安全保存在 VS Code SecretStorage 中。",
+  "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL，默认使用官方接口地址。使用代理或第三方供应商时可修改。\n\n点此 ➡️ [设置 Gemini API Key](command:ai-commit.setGeminiApiKey)。Key 将安全保存在 VS Code SecretStorage 中。",
   "aiCommit.config.geminiModel.description": "Gemini 模型",
   "aiCommit.config.geminiTemperature.description": "Gemini temperature（0-2），控制输出随机性。"
 }
