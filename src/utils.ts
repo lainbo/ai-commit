@@ -14,7 +14,7 @@ export class ProgressHandler {
       {
         location: vscode.ProgressLocation.Notification,
         title: `[Nota AI Commit] ${title}`,
-        cancellable: true
+        cancellable: false
       },
       task
     );

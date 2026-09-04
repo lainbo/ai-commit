@@ -1,8 +1,15 @@
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ChatCompletionMessageParam } from 'openai/resources';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager } from './config';
-import { getDiffStaged, getDiffUnstaged, getUntrackedDiff, getGitLogOneline, GitLogAuthorScope } from './git-utils';
+import {
+  getDiffStaged,
+  getDiffUnstaged,
+  getUntrackedDiff,
+  getGitLogOneline,
+  GitLogAuthorScope
+} from './git-utils';
 import { ChatGPTAPI, getOpenAIChatCompletionsRequestUrl } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
@@ -10,6 +17,50 @@ import { GeminiAPI, getGeminiGenerateContentRequestUrl } from './gemini-utils';
 import { getOutputChannel, logError, logInfo, logSection } from './output';
 
 type DiffSource = 'auto' | 'staged' | 'unstaged' | 'staged+unstaged';
+type DiffResult = { diff: string; error?: string };
+
+function getDiffOrThrow(result: DiffResult, label: string): string {
+  if (result.error) {
+    throw new Error(`Failed to get ${label} changes: ${result.error}`);
+  }
+  return result.diff.trim();
+}
+
+async function getWorkingTreeDiff(repo: any): Promise<string> {
+  const [unstagedResult, untrackedResult] = await Promise.all([
+    getDiffUnstaged(repo),
+    getUntrackedDiff(repo)
+  ]);
+  const unstagedDiff = getDiffOrThrow(unstagedResult, 'unstaged');
+  const untrackedDiff = getDiffOrThrow(untrackedResult, 'untracked');
+  return [unstagedDiff, untrackedDiff].filter(Boolean).join('\n');
+}
+
+async function getSelectedDiff(repo: any, diffSource: DiffSource): Promise<string> {
+  if (diffSource === 'staged') {
+    return getDiffOrThrow(await getDiffStaged(repo), 'staged');
+  }
+
+  if (diffSource === 'unstaged') {
+    return getWorkingTreeDiff(repo);
+  }
+
+  if (diffSource === 'staged+unstaged') {
+    const [stagedDiff, workingTreeDiff] = await Promise.all([
+      getDiffStaged(repo).then((result) => getDiffOrThrow(result, 'staged')),
+      getWorkingTreeDiff(repo)
+    ]);
+    return [
+      stagedDiff ? `--- STAGED ---\n${stagedDiff}` : '',
+      workingTreeDiff ? `--- UNSTAGED ---\n${workingTreeDiff}` : ''
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+  }
+
+  const stagedDiff = getDiffOrThrow(await getDiffStaged(repo), 'staged');
+  return stagedDiff || getWorkingTreeDiff(repo);
+}
 
 /**
  * Generates a chat completion prompt for the commit message based on the provided diff.
@@ -77,17 +128,47 @@ export async function getRepo(arg) {
     throw new Error('Git extension not found');
   }
 
-  if (typeof arg === 'object' && arg.rootUri) {
-    const resourceUri = arg.rootUri;
-    const realResourcePath: string = fs.realpathSync(resourceUri!.fsPath);
-    for (let i = 0; i < gitApi.repositories.length; i++) {
-      const repo = gitApi.repositories[i];
-      if (realResourcePath.startsWith(repo.rootUri.fsPath)) {
-        return repo;
-      }
-    }
+  const repositories = gitApi.repositories;
+  if (repositories.length === 0) {
+    throw new Error('No Git repository found');
   }
-  return gitApi.repositories[0];
+
+  if (typeof arg !== 'object' || !arg.rootUri) {
+    return repositories[0];
+  }
+
+  const resourcePath = getCanonicalPath(arg.rootUri.fsPath);
+  const repositoryPaths = repositories.map((repo) => ({
+    repo,
+    rootPath: getCanonicalPath(repo.rootUri.fsPath)
+  }));
+  const exactMatch = repositoryPaths.find(({ rootPath }) => rootPath === resourcePath);
+  if (exactMatch) {
+    return exactMatch.repo;
+  }
+
+  const containingMatch = repositoryPaths
+    .filter(({ rootPath }) => isPathInside(rootPath, resourcePath))
+    .sort((a, b) => b.rootPath.length - a.rootPath.length)[0];
+  return containingMatch?.repo ?? repositories[0];
+}
+
+function getCanonicalPath(filePath: string): string {
+  try {
+    return path.normalize(fs.realpathSync(filePath));
+  } catch {
+    return path.resolve(filePath);
+  }
+}
+
+function isPathInside(rootPath: string, filePath: string): boolean {
+  const relativePath = path.relative(rootPath, filePath);
+  return (
+    relativePath === '' ||
+    (relativePath !== '..' &&
+      !relativePath.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativePath))
+  );
 }
 
 /**
@@ -103,56 +184,24 @@ export async function generateCommitMsg(arg) {
       const configManager = ConfigurationManager.getInstance();
       const repo = await getRepo(arg);
 
-      const aiProvider = configManager.getConfig<string>(ConfigKeys.AI_PROVIDER, 'openai');
-      const diffSource = configManager.getConfig<DiffSource>(ConfigKeys.DIFF_SOURCE, 'auto');
+      const aiProvider = configManager.getConfig<string>(
+        ConfigKeys.AI_PROVIDER,
+        'openai'
+      );
+      const diffSource = configManager.getConfig<DiffSource>(
+        ConfigKeys.DIFF_SOURCE,
+        'auto'
+      );
       const scmInputBehavior = configManager.getConfig<string>(
         ConfigKeys.SCM_INPUT_BEHAVIOR,
-        'context'
+        'ignore'
       );
       logInfo(`AI Provider: ${aiProvider}`);
       logInfo(`Diff Source: ${diffSource}`);
       logInfo(`SCM Input Behavior: ${scmInputBehavior}`);
 
       progress.report({ message: 'Getting git changes...' });
-      const [stagedResult, unstagedResult, untrackedResult] = await Promise.all([
-        getDiffStaged(repo),
-        getDiffUnstaged(repo),
-        getUntrackedDiff(repo)
-      ]);
-
-      if (stagedResult.error) {
-        throw new Error(`Failed to get staged changes: ${stagedResult.error}`);
-      }
-
-      if (unstagedResult.error) {
-        throw new Error(`Failed to get unstaged changes: ${unstagedResult.error}`);
-      }
-
-      const stagedDiff = stagedResult.diff.trim();
-      const rawUnstagedDiff = unstagedResult.diff.trim();
-      const rawUntrackedDiff = untrackedResult.diff.trim();
-      const unstagedDiff = [rawUnstagedDiff, rawUntrackedDiff]
-        .filter(Boolean)
-        .join('\n');
-
-      let selectedDiff = '';
-      switch (diffSource) {
-        case 'staged':
-          selectedDiff = stagedDiff;
-          break;
-        case 'unstaged':
-          selectedDiff = unstagedDiff;
-          break;
-        case 'staged+unstaged':
-          selectedDiff = [stagedDiff ? `--- STAGED ---\n${stagedDiff}` : '', unstagedDiff ? `--- UNSTAGED ---\n${unstagedDiff}` : '']
-            .filter(Boolean)
-            .join('\n\n');
-          break;
-        case 'auto':
-        default:
-          selectedDiff = stagedDiff || unstagedDiff;
-          break;
-      }
+      const selectedDiff = await getSelectedDiff(repo, diffSource);
 
       if (!selectedDiff) {
         if (diffSource === 'staged') {
@@ -161,7 +210,9 @@ export async function generateCommitMsg(arg) {
           );
         }
         if (diffSource === 'unstaged') {
-          throw new Error("No unstaged changes found. Modify files or set 'ai-commit.DIFF_SOURCE' to 'staged'/'auto'.");
+          throw new Error(
+            "No unstaged changes found. Modify files or set 'ai-commit.DIFF_SOURCE' to 'staged'/'auto'."
+          );
         }
         throw new Error('No git changes found to generate a commit message');
       }
@@ -176,7 +227,7 @@ export async function generateCommitMsg(arg) {
         scmInputBehavior === 'context' ? scmInputText : undefined;
       const shouldReferenceGitLog = configManager.getConfig<boolean>(
         ConfigKeys.REFERENCE_GIT_LOG,
-        false
+        true
       );
 
       let gitLogContext: string | undefined;
