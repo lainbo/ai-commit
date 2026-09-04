@@ -1,7 +1,3 @@
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "amodio.tsl-problem-matcher",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["connor4312.esbuild-problem-matchers", "oxc.oxc-vscode"]
 }
