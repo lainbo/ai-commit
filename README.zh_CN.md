@@ -38,7 +38,20 @@
 2. 从 [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=lainbo.nota-ai-commit-lainbo) 直接安装。
 
 > **Note**\
-> 请确保 Node.js 版本 >= 16
+> 插件要求 VS Code 1.90 或更高版本。本地开发要求 Node.js 20 或更高版本。
+
+### 🔐 API Key
+
+在 **扩展** 中找到 **Nota AI Commit**，点击齿轮菜单，选择 **设置 API Key** → **OpenAI** 或 **Gemini**，即可弹出密码输入框。
+
+也可以打开 VS Code 设置，搜索 `ai-commit`，在 **OPENAI_BASE_URL** 或 **GEMINI_BASE_URL** 下找到 **点此 ➡️**，点击 **设置 OpenAI API Key** 或 **设置 Gemini API Key**，然后在弹出的密码输入框中输入新 Key。保存新 Key 会替换原来的 Key。
+
+API Key 将保存在 VS Code SecretStorage 中，不再写入普通设置。也可以通过命令面板运行以下命令：
+
+- `Nota AI Commit：设置 OpenAI API Key`
+- `Nota AI Commit：设置 Gemini API Key`
+
+旧版本保存的 API Key 只有一个明确配置值时，插件会自动迁移。
 
 ### ⚙️ 配置
 
@@ -47,22 +60,20 @@
 | 配置               |  类型  |         默认         | 必填 |                                                       说明                                                        |
 | :----------------- | :----: | :------------------: | :--: | :--------------------------------------------------------------------------------------------------------------- |
 | DIFF_SOURCE        | string |         auto         |  否  |       使用哪些改动：`auto`（优先暂存）、`staged`、`unstaged`、`staged+unstaged`（会增加分隔符）。       |
-| SCM_INPUT_BEHAVIOR | string |       context        |  否  | 生成时如何处理输入框：`ignore`（始终忽略），`context`（作为额外上下文/约束发送，例如 Bug ID）。 |
-| REFERENCE_GIT_LOG  |  bool  |        false         |  否  |       是否把最近的 `git log --oneline` 提交历史作为额外上下文提供给模型参考（默认关闭）。       |
+| SCM_INPUT_BEHAVIOR | string |        ignore        |  否  | 生成时如何处理输入框：`ignore`（始终忽略），`context`（作为额外上下文/约束发送，例如 Bug ID）。 |
+| REFERENCE_GIT_LOG  |  bool  |         true         |  否  | 默认把最近的 `git log --oneline` 提交说明发送给所选 AI 服务，作为生成风格参考。 |
 | GIT_LOG_COUNT      | number |          20          |  否  |                         提供给模型参考的最近提交条数（1-50）。                         |
 | GIT_LOG_AUTHOR_SCOPE | string |        all         |  否  |            提交历史包含哪些作者：`all` 或 `self`（`self` 使用 `git config user.name` 过滤）。            |
 | AI_PROVIDER        | string |        openai        |  是  |                                      选择 AI Provider：`openai` 或 `gemini`。                                      |
-| OPENAI_API_KEY     | string |         None         |  是  |        当 `AI Provider` 设为 `OpenAI` 时必填。[OpenAI token](https://platform.openai.com/account/api-keys)         |
 | OPENAI_BASE_URL    | string |         None         |  否  |                 如使用 Azure：`https://{resource}.openai.azure.com/openai/deployments/{model}`                  |
 | OPENAI_MODEL       | string |      gpt-5-mini      |  是  |        OpenAI 模型；你可以运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。        |
 | AZURE_API_VERSION  | string |         None         |  否  |                                                  AZURE_API_VERSION                                                  |
-| OPENAI_TEMPERATURE | number |         0.7          |  否  |                控制输出随机性。范围：0-2。值越低越集中，值越高越有创造性。                |
-| GEMINI_API_KEY     | string |         None         |  是  |        当 `AI Provider` 设为 `Gemini` 时必填。[Gemini API key](https://makersuite.google.com/app/apikey)        |
+| OPENAI_TEMPERATURE | number |        未设置        |  否  | 可选的采样温度（0-2）。默认不发送，GPT-5 和 o 系列推理模型会忽略此配置。 |
 | GEMINI_BASE_URL    | string |         None         |  否  |           Gemini Base URL（可选）。如使用第三方供应商 Endpoint 则填写；否则留空。           |
-| GEMINI_MODEL       | string | gemini-2.0-flash-001 |  是  |                                 Gemini 模型。当前模型选择仅限于配置项。                                 |
+| GEMINI_MODEL       | string |  gemini-3.8-flash    |  是  |                                 Gemini 模型。当前模型选择仅限于配置项。                                 |
 | GEMINI_TEMPERATURE | number |         0.7          |  否  |         控制输出随机性。Gemini 范围：0-2。值越低越集中，值越高越有创造性。         |
-| AI_COMMIT_LANGUAGE | string |          en          |  是  |                                                  支持 19 种语言                                                  |
-| SYSTEM_PROMPT      | string |         None         |  否  |                                                  自定义系统提示词                                                  |
+| AI_COMMIT_LANGUAGE | string |       English        |  是  |                                                  支持 19 种语言                                                  |
+| AI_COMMIT_SYSTEM_PROMPT | string |     None       |  否  |                                                  自定义系统提示词                                                  |
 
 ---
 
