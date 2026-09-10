@@ -25,8 +25,14 @@
   "aiCommit.config.scmInputBehavior.enum.ignore": "Ignore the input box content",
   "aiCommit.config.scmInputBehavior.enum.context": "Use the input box content as additional context/constraints (for example, if you want the AI-generated commit message to include a Bug ID, you can first enter the Bug ID in the input box, and the AI will generate content based on the entered information).",
   "aiCommit.config.openaiTemperature.description": "Optional OpenAI temperature setting (0-2). It is omitted by default and ignored for GPT-5 and o-series reasoning models.",
-  "aiCommit.config.aiProvider.description": "AI Provider to use (OpenAI or Gemini).",
+  "aiCommit.config.aiProvider.description": "AI Provider to use (OpenAI, Gemini, or Anthropic).",
   "aiCommit.config.geminiBaseUrl.description": "Gemini Base URL. Uses the official endpoint by default. Change it when using a proxy or third-party provider.\n\nClick here ➡️ [Set Gemini API Key](command:ai-commit.setGeminiApiKey). The key is stored securely in VS Code SecretStorage.",
   "aiCommit.config.geminiModel.description": "Gemini Model to use",
-  "aiCommit.config.geminiTemperature.description": "Gemini temperature setting (0-2). Controls randomness."
+  "aiCommit.config.geminiTemperature.description": "Gemini temperature setting (0-2). Controls randomness.",
+  "aiCommit.configuration.anthropic.title": "Anthropic",
+  "aiCommit.command.setAnthropicApiKey.title": "Nota AI Commit: Set Anthropic API Key",
+  "aiCommit.command.clearAnthropicApiKey.title": "Nota AI Commit: Clear Anthropic API Key",
+  "aiCommit.config.anthropicBaseUrl.description": "Anthropic Messages API Base URL, including /v1 (do not include /messages). Uses the official endpoint by default; change it for an Anthropic-compatible provider.\n\nClick here ➡️ [Set Anthropic API Key](command:ai-commit.setAnthropicApiKey). The key is stored securely in VS Code SecretStorage.",
+  "aiCommit.config.anthropicModel.description": "Anthropic model ID. For third-party providers, use their model ID.",
+  "aiCommit.config.anthropicMaxTokens.description": "Maximum output tokens for Anthropic. Increase this if the response is truncated, within the model output limit."
 }

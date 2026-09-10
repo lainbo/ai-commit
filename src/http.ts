@@ -94,13 +94,23 @@ const GEMINI_STATUS_MESSAGES: Record<number, string> = {
   503: 'Gemini service is temporarily unavailable.'
 };
 
+const ANTHROPIC_STATUS_MESSAGES: Record<number, string> = {
+  401: 'Invalid Anthropic API key. Run "Nota AI Commit: Set Anthropic API Key" to update it.',
+  403: 'Anthropic access denied. Check your API key permissions and model access.',
+  404: 'Anthropic endpoint or model not found (404). Check ai-commit.ANTHROPIC_BASE_URL (should end with /v1, do not include /messages) and ai-commit.ANTHROPIC_MODEL.',
+  413: 'Anthropic request is too large. Reduce the selected git changes or commit history.',
+  429: 'Anthropic rate limit exceeded. Please try again later.',
+  500: 'Anthropic server error. Please try again later.',
+  529: 'Anthropic service is overloaded. Please try again later.'
+};
+
 export function mapProviderHttpError(
-  provider: 'openai' | 'gemini',
+  provider: 'openai' | 'gemini' | 'anthropic',
   error: unknown
 ): Error {
   const msg = error instanceof Error ? error.message : String(error);
   const status = getHttpStatus(error);
-  const name = provider === 'gemini' ? 'Gemini' : 'OpenAI';
+  const name = { openai: 'OpenAI', gemini: 'Gemini', anthropic: 'Anthropic' }[provider];
 
   if (typeof status !== 'number') {
     return new Error(`${name} API error: ${msg}`);
@@ -114,10 +124,11 @@ export function mapProviderHttpError(
     );
   }
 
-  const mapped =
-    provider === 'gemini'
-      ? GEMINI_STATUS_MESSAGES[status]
-      : OPENAI_STATUS_MESSAGES[status];
+  const mapped = {
+    openai: OPENAI_STATUS_MESSAGES,
+    gemini: GEMINI_STATUS_MESSAGES,
+    anthropic: ANTHROPIC_STATUS_MESSAGES
+  }[provider][status];
   if (mapped) {
     return new Error(mapped);
   }

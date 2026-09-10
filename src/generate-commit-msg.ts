@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { completeAnthropic, getAnthropicMessagesRequestUrl } from './anthropic';
 import { ConfigKeys, getConfig, getOptionalConfig } from './config';
 import {
   DiffSource,
@@ -145,7 +146,8 @@ export async function generateCommitMsg(arg: unknown): Promise<void> {
           : 'Generating commit message...'
       });
 
-      const provider = aiProvider === 'gemini' ? 'gemini' : 'openai';
+      const provider =
+        aiProvider === 'gemini' || aiProvider === 'anthropic' ? aiProvider : 'openai';
       try {
         let commitMessage: string;
         if (provider === 'gemini') {
@@ -155,6 +157,10 @@ export async function generateCommitMsg(arg: unknown): Promise<void> {
             `Gemini Request URL: ${getGeminiGenerateContentRequestUrl(modelName, baseUrl)}`
           );
           commitMessage = await completeGemini(messages);
+        } else if (provider === 'anthropic') {
+          const baseUrl = getOptionalConfig<string>(ConfigKeys.ANTHROPIC_BASE_URL);
+          logInfo(`Anthropic Request URL: ${getAnthropicMessagesRequestUrl(baseUrl)}`);
+          commitMessage = await completeAnthropic(messages);
         } else {
           const baseURL = getOptionalConfig<string>(ConfigKeys.OPENAI_BASE_URL);
           const apiVersion = getOptionalConfig<string>(ConfigKeys.AZURE_API_VERSION);

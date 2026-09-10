@@ -6,7 +6,7 @@
 
 <h1>Nota AI Commit</h1>
 
-Nota AI Commit is a VS Code extension that uses OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review Git changes, generate commit messages that follow Conventional Commits, and simplify the commit process.
+Nota AI Commit is a VS Code extension that uses OpenAI / Azure OpenAI / DeepSeek / Gemini / Anthropic APIs to review Git changes, generate commit messages that follow Conventional Commits, and simplify the commit process.
 
 **English** · [简体中文](./README.zh_CN.md) · [Marketplace][vscode-marketplace-link] · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
 
@@ -16,7 +16,7 @@ Nota AI Commit is a VS Code extension that uses OpenAI / Azure OpenAI / DeepSeek
 
 ## ✨ Features
 
-- 🤯 Support generating commit messages based on git diffs using ChatGPT / Azure API / DeepSeek / Gemini API.
+- 🤯 Support generating commit messages based on git diffs using ChatGPT / Azure API / DeepSeek / Gemini / Anthropic API.
 - 🗺️ Support multi-language commit messages.
 - 😜 Support adding Gitmoji.
 - 🛠️ Support custom system prompt.
@@ -25,7 +25,7 @@ Nota AI Commit is a VS Code extension that uses OpenAI / Azure OpenAI / DeepSeek
 - ✅ Configure which git changes are used with `ai-commit.DIFF_SOURCE` (`auto` / `staged` / `unstaged` / `staged+unstaged`)
 - ✅ Configure whether to send the SCM input box content as AI context with `ai-commit.SCM_INPUT_BEHAVIOR` (`context` / `ignore`)
 - ✅ Include recent `git log --oneline` history as model context with `ai-commit.REFERENCE_GIT_LOG`
-- ✅ Supports Custom Endpoint URLs for Gemini
+- ✅ Supports custom endpoint URLs for Gemini and Anthropic Messages API
 
 ## 📦 Installation
 
@@ -37,14 +37,15 @@ Nota AI Commit is a VS Code extension that uses OpenAI / Azure OpenAI / DeepSeek
 
 ### 🔐 API Keys
 
-In **Extensions**, find **Nota AI Commit**, click its gear menu, and choose **Set API Key** → **OpenAI** or **Gemini** to open the password input.
+In **Extensions**, find **Nota AI Commit**, click its gear menu, and choose **Set API Key** → **OpenAI**, **Gemini**, or **Anthropic** to open the password input.
 
-You can also open VS Code Settings and search for `ai-commit`. Under **OPENAI_BASE_URL** or **GEMINI_BASE_URL**, follow **Click here ➡️** and click **Set OpenAI API Key** or **Set Gemini API Key**, then enter the new key in the password input. Saving a new key replaces the previous key.
+You can also open VS Code Settings and search for `ai-commit`. Under **OPENAI_BASE_URL**, **GEMINI_BASE_URL**, or **ANTHROPIC_BASE_URL**, follow **Click here ➡️** to set the corresponding API key, then enter the new key in the password input. Saving a new key replaces the previous key.
 
 API keys are stored in VS Code SecretStorage instead of settings. You can also use the following commands from the Command Palette:
 
 - `Nota AI Commit: Set OpenAI API Key`
 - `Nota AI Commit: Set Gemini API Key`
+- `Nota AI Commit: Set Anthropic API Key`
 
 API keys saved by an earlier version are migrated automatically when there is only one configured value.
 
@@ -52,23 +53,32 @@ API keys saved by an earlier version are migrated automatically when there is on
 
 In the VSCode settings, locate the "ai-commit" configuration options and configure them as needed:
 
-| Configuration           |  Type  |                   Default                   | Required | Notes                                                                                                                                            |
-| :---------------------- | :----: | :-----------------------------------------: | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------- |
-| DIFF_SOURCE             | string |                    auto                     |    No    | Which changes to use: `auto` (prefer staged), `staged`, `unstaged`, `staged+unstaged` (adds separators).                                         |
-| SCM_INPUT_BEHAVIOR      | string |                   ignore                    |    No    | How to treat SCM input box content: `ignore` (always ignore), `context` (send as additional context/requirements).                               |
-| REFERENCE_GIT_LOG       |  bool  |                    true                     |    No    | Include recent `git log --oneline` history as additional context for the model. Commit subjects are sent to the selected AI provider by default. |
-| GIT_LOG_COUNT           | number |                     20                      |    No    | How many recent commits to include (1-50).                                                                                                       |
-| GIT_LOG_AUTHOR_SCOPE    | string |                     all                     |    No    | Which authors to include: `all` or `self` (uses `git config user.name`).                                                                         |
-| AI_PROVIDER             | string |                   openai                    |   Yes    | Select AI Provider: `openai` or `gemini`.                                                                                                        |
-| OPENAI_BASE_URL         | string |         `https://api.openai.com/v1`         |    No    | If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                                                              |
-| OPENAI_MODEL            | string |                 gpt-5-mini                  |   Yes    | OpenAI MODEL, you can select a model from the list by running the `Show Available OpenAI Models` command                                         |
-| AZURE_API_VERSION       | string |                    None                     |    No    | AZURE_API_VERSION                                                                                                                                |
-| OPENAI_TEMPERATURE      | number |                   Not set                   |    No    | Optional sampling temperature (0-2). Omitted by default and ignored for GPT-5 and o-series reasoning models.                                     |
-| GEMINI_BASE_URL         | string | `https://generativelanguage.googleapis.com` |    No    | Gemini Base URL. Uses the official endpoint by default; change it when using a proxy or third-party provider.                                    |
-| GEMINI_MODEL            | string |              gemini-3.8-flash               |   Yes    | Gemini MODEL. Currently, model selection is limited to configuration.                                                                            |
-| GEMINI_TEMPERATURE      | number |                     0.7                     |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative                               |
-| AI_COMMIT_LANGUAGE      | string |                   English                   |   Yes    | Supports 19 languages                                                                                                                            |
-| AI_COMMIT_SYSTEM_PROMPT | string |                    None                     |    No    | Custom system prompt                                                                                                                             |
+| Configuration           |  Type   |                   Default                   | Required | Notes                                                                                                                                            |
+| :---------------------- | :-----: | :-----------------------------------------: | :------: | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| DIFF_SOURCE             | string  |                    auto                     |    No    | Which changes to use: `auto` (prefer staged), `staged`, `unstaged`, `staged+unstaged` (adds separators).                                         |
+| SCM_INPUT_BEHAVIOR      | string  |                   ignore                    |    No    | How to treat SCM input box content: `ignore` (always ignore), `context` (send as additional context/requirements).                               |
+| REFERENCE_GIT_LOG       |  bool   |                    true                     |    No    | Include recent `git log --oneline` history as additional context for the model. Commit subjects are sent to the selected AI provider by default. |
+| GIT_LOG_COUNT           | number  |                     20                      |    No    | How many recent commits to include (1-50).                                                                                                       |
+| GIT_LOG_AUTHOR_SCOPE    | string  |                     all                     |    No    | Which authors to include: `all` or `self` (uses `git config user.name`).                                                                         |
+| AI_PROVIDER             | string  |                   openai                    |   Yes    | Select AI Provider: `openai`, `gemini`, or `anthropic`.                                                                                          |
+| OPENAI_BASE_URL         | string  |         `https://api.openai.com/v1`         |    No    | If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                                                              |
+| OPENAI_MODEL            | string  |                 gpt-5-mini                  |   Yes    | OpenAI MODEL, you can select a model from the list by running the `Show Available OpenAI Models` command                                         |
+| AZURE_API_VERSION       | string  |                    None                     |    No    | AZURE_API_VERSION                                                                                                                                |
+| OPENAI_TEMPERATURE      | number  |                   Not set                   |    No    | Optional sampling temperature (0-2). Omitted by default and ignored for GPT-5 and o-series reasoning models.                                     |
+| GEMINI_BASE_URL         | string  | `https://generativelanguage.googleapis.com` |    No    | Gemini Base URL. Uses the official endpoint by default; change it when using a proxy or third-party provider.                                    |
+| GEMINI_MODEL            | string  |              gemini-3.8-flash               |   Yes    | Gemini MODEL. Currently, model selection is limited to configuration.                                                                            |
+| GEMINI_TEMPERATURE      | number  |                     0.7                     |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative                               |
+| ANTHROPIC_BASE_URL      | string  |       `https://api.anthropic.com/v1`        |    No    | Anthropic Messages API base URL, including `/v1`; do not include `/messages`. Supports Anthropic-compatible providers.                           |
+| ANTHROPIC_MODEL         | string  |               claude-sonnet-5               |   Yes    | Anthropic model ID, or the model ID supplied by your third-party provider.                                                                       |
+| ANTHROPIC_MAX_TOKENS    | integer |                    4096                     |    No    | Maximum output tokens. If the response is truncated, increase this within the model output limit.                                                |
+| AI_COMMIT_LANGUAGE      | string  |                   English                   |   Yes    | Supports 19 languages                                                                                                                            |
+| AI_COMMIT_SYSTEM_PROMPT | string  |                    None                     |    No    | Custom system prompt                                                                                                                             |
+
+### Anthropic / Claude
+
+Set `ai-commit.AI_PROVIDER` to `anthropic`, then run `Nota AI Commit: Set Anthropic API Key`. The default endpoint is `https://api.anthropic.com/v1`, and the default model is `claude-sonnet-5`.
+
+For an Anthropic-compatible provider, set `ai-commit.ANTHROPIC_BASE_URL` to its API base URL including `/v1` (for example, `https://example.com/v1`) and configure `ai-commit.ANTHROPIC_MODEL`. The extension appends `/messages` and uses the [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages/create).
 
 ---
 

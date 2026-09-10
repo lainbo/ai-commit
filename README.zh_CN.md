@@ -6,7 +6,7 @@
 
 <h1>Nota AI Commit</h1>
 
-Nota AI Commit 是一款 VS Code 扩展，使用 OpenAI / Azure OpenAI / DeepSeek / Gemini API 审查 Git 变更，生成符合 Conventional Commits 规范的提交消息，简化提交流程，并保持提交规范一致。
+Nota AI Commit 是一款 VS Code 扩展，使用 OpenAI / Azure OpenAI / DeepSeek / Gemini / Anthropic API 审查 Git 变更，生成符合 Conventional Commits 规范的提交消息，简化提交流程，并保持提交规范一致。
 
 [English](./README.md) · **简体中文** · [插件市场][vscode-marketplace-link] · [报告问题][github-issues-link] · [请求功能][github-issues-link]
 
@@ -16,7 +16,7 @@ Nota AI Commit 是一款 VS Code 扩展，使用 OpenAI / Azure OpenAI / DeepSee
 
 ## ✨ 特性
 
-- 🤯 支持使用 ChatGPT / Azure API / DeepSeek / Gemini API 基于 git diffs 生成提交信息。
+- 🤯 支持使用 ChatGPT / Azure API / DeepSeek / Gemini / Anthropic API 基于 git diffs 生成提交信息。
 - 🗺️ 支持多语言提交信息。
 - 😜 支持添加 Gitmoji。
 - 🛠️ 支持自定义系统提示词。
@@ -25,7 +25,7 @@ Nota AI Commit 是一款 VS Code 扩展，使用 OpenAI / Azure OpenAI / DeepSee
 - ✅ 通过配置 `ai-commit.DIFF_SOURCE` 控制生成时使用哪些改动（`auto` / `staged` / `unstaged` / `staged+unstaged`）
 - ✅ 通过配置 `ai-commit.SCM_INPUT_BEHAVIOR` 控制是否将源代码管理输入框内容作为 AI 上下文发送（`context` / `ignore`）
 - ✅ 通过配置 `ai-commit.REFERENCE_GIT_LOG`，可把最近的 `git log --oneline` 提交历史作为模型参考上下文
-- ✅ 支持 Gemini 自定义 Endpoint URL
+- ✅ 支持 Gemini 和 Anthropic Messages API 自定义 Endpoint URL
 
 ## 📦 安装
 
@@ -37,14 +37,15 @@ Nota AI Commit 是一款 VS Code 扩展，使用 OpenAI / Azure OpenAI / DeepSee
 
 ### 🔐 API Key
 
-在 **扩展** 中找到 **Nota AI Commit**，点击齿轮菜单，选择 **设置 API Key** → **OpenAI** 或 **Gemini**，即可弹出密码输入框。
+在 **扩展** 中找到 **Nota AI Commit**，点击齿轮菜单，选择 **设置 API Key** → **OpenAI**、**Gemini** 或 **Anthropic**，即可弹出密码输入框。
 
-也可以打开 VS Code 设置，搜索 `ai-commit`，在 **OPENAI_BASE_URL** 或 **GEMINI_BASE_URL** 下找到 **点此 ➡️**，点击 **设置 OpenAI API Key** 或 **设置 Gemini API Key**，然后在弹出的密码输入框中输入新 Key。保存新 Key 会替换原来的 Key。
+也可以打开 VS Code 设置，搜索 `ai-commit`，在 **OPENAI_BASE_URL**、**GEMINI_BASE_URL** 或 **ANTHROPIC_BASE_URL** 下找到 **点此 ➡️**，点击对应的设置 API Key 链接，然后在弹出的密码输入框中输入新 Key。保存新 Key 会替换原来的 Key。
 
 API Key 将保存在 VS Code SecretStorage 中，不再写入普通设置。也可以通过命令面板运行以下命令：
 
 - `Nota AI Commit：设置 OpenAI API Key`
 - `Nota AI Commit：设置 Gemini API Key`
+- `Nota AI Commit：设置 Anthropic API Key`
 
 旧版本保存的 API Key 只有一个明确配置值时，插件会自动迁移。
 
@@ -52,23 +53,32 @@ API Key 将保存在 VS Code SecretStorage 中，不再写入普通设置。也�
 
 在 VSCode 设置中，找到 "ai-commit" 配置项，并按需配置：
 
-| 配置                    |  类型  |                    默认                     | 必填 | 说明                                                                                            |
-| :---------------------- | :----: | :-----------------------------------------: | :--: | :---------------------------------------------------------------------------------------------- |
-| DIFF_SOURCE             | string |                    auto                     |  否  | 使用哪些改动：`auto`（优先暂存）、`staged`、`unstaged`、`staged+unstaged`（会增加分隔符）。     |
-| SCM_INPUT_BEHAVIOR      | string |                   ignore                    |  否  | 生成时如何处理输入框：`ignore`（始终忽略），`context`（作为额外上下文/约束发送，例如 Bug ID）。 |
-| REFERENCE_GIT_LOG       |  bool  |                    true                     |  否  | 默认把最近的 `git log --oneline` 提交说明发送给所选 AI 服务，作为生成风格参考。                 |
-| GIT_LOG_COUNT           | number |                     20                      |  否  | 提供给模型参考的最近提交条数（1-50）。                                                          |
-| GIT_LOG_AUTHOR_SCOPE    | string |                     all                     |  否  | 提交历史包含哪些作者：`all` 或 `self`（`self` 使用 `git config user.name` 过滤）。              |
-| AI_PROVIDER             | string |                   openai                    |  是  | 选择 AI Provider：`openai` 或 `gemini`。                                                        |
-| OPENAI_BASE_URL         | string |         `https://api.openai.com/v1`         |  否  | 如使用 Azure：`https://{resource}.openai.azure.com/openai/deployments/{model}`                  |
-| OPENAI_MODEL            | string |                 gpt-5-mini                  |  是  | OpenAI 模型；你可以运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。               |
-| AZURE_API_VERSION       | string |                    None                     |  否  | AZURE_API_VERSION                                                                               |
-| OPENAI_TEMPERATURE      | number |                   未设置                    |  否  | 可选的采样温度（0-2）。默认不发送，GPT-5 和 o 系列推理模型会忽略此配置。                        |
-| GEMINI_BASE_URL         | string | `https://generativelanguage.googleapis.com` |  否  | Gemini Base URL，默认使用官方接口地址；使用代理或第三方供应商时可修改。                         |
-| GEMINI_MODEL            | string |              gemini-3.8-flash               |  是  | Gemini 模型。当前模型选择仅限于配置项。                                                         |
-| GEMINI_TEMPERATURE      | number |                     0.7                     |  否  | 控制输出随机性。Gemini 范围：0-2。值越低越集中，值越高越有创造性。                              |
-| AI_COMMIT_LANGUAGE      | string |                   English                   |  是  | 支持 19 种语言                                                                                  |
-| AI_COMMIT_SYSTEM_PROMPT | string |                    None                     |  否  | 自定义系统提示词                                                                                |
+| 配置                    |  类型   |                    默认                     | 必填 | 说明                                                                                               |
+| :---------------------- | :-----: | :-----------------------------------------: | :--: | :------------------------------------------------------------------------------------------------- |
+| DIFF_SOURCE             | string  |                    auto                     |  否  | 使用哪些改动：`auto`（优先暂存）、`staged`、`unstaged`、`staged+unstaged`（会增加分隔符）。        |
+| SCM_INPUT_BEHAVIOR      | string  |                   ignore                    |  否  | 生成时如何处理输入框：`ignore`（始终忽略），`context`（作为额外上下文/约束发送，例如 Bug ID）。    |
+| REFERENCE_GIT_LOG       |  bool   |                    true                     |  否  | 默认把最近的 `git log --oneline` 提交说明发送给所选 AI 服务，作为生成风格参考。                    |
+| GIT_LOG_COUNT           | number  |                     20                      |  否  | 提供给模型参考的最近提交条数（1-50）。                                                             |
+| GIT_LOG_AUTHOR_SCOPE    | string  |                     all                     |  否  | 提交历史包含哪些作者：`all` 或 `self`（`self` 使用 `git config user.name` 过滤）。                 |
+| AI_PROVIDER             | string  |                   openai                    |  是  | 选择 AI Provider：`openai`、`gemini` 或 `anthropic`。                                              |
+| OPENAI_BASE_URL         | string  |         `https://api.openai.com/v1`         |  否  | 如使用 Azure：`https://{resource}.openai.azure.com/openai/deployments/{model}`                     |
+| OPENAI_MODEL            | string  |                 gpt-5-mini                  |  是  | OpenAI 模型；你可以运行 `Show Available OpenAI Models` 命令从列表中选择一个模型。                  |
+| AZURE_API_VERSION       | string  |                    None                     |  否  | AZURE_API_VERSION                                                                                  |
+| OPENAI_TEMPERATURE      | number  |                   未设置                    |  否  | 可选的采样温度（0-2）。默认不发送，GPT-5 和 o 系列推理模型会忽略此配置。                           |
+| GEMINI_BASE_URL         | string  | `https://generativelanguage.googleapis.com` |  否  | Gemini Base URL，默认使用官方接口地址；使用代理或第三方供应商时可修改。                            |
+| GEMINI_MODEL            | string  |              gemini-3.8-flash               |  是  | Gemini 模型。当前模型选择仅限于配置项。                                                            |
+| GEMINI_TEMPERATURE      | number  |                     0.7                     |  否  | 控制输出随机性。Gemini 范围：0-2。值越低越集中，值越高越有创造性。                                 |
+| ANTHROPIC_BASE_URL      | string  |       `https://api.anthropic.com/v1`        |  否  | Anthropic Messages API 地址，填写到 `/v1`，不要包含 `/messages`。支持 Anthropic 格式的第三方服务。 |
+| ANTHROPIC_MODEL         | string  |               claude-sonnet-5               |  是  | Anthropic 模型 ID，或第三方服务提供的模型 ID。                                                     |
+| ANTHROPIC_MAX_TOKENS    | integer |                    4096                     |  否  | 最大输出 token 数。若响应被截断，可在模型输出上限内增大此值。                                      |
+| AI_COMMIT_LANGUAGE      | string  |                   English                   |  是  | 支持 19 种语言                                                                                     |
+| AI_COMMIT_SYSTEM_PROMPT | string  |                    None                     |  否  | 自定义系统提示词                                                                                   |
+
+### Anthropic / Claude
+
+将 `ai-commit.AI_PROVIDER` 设为 `anthropic`，然后运行 `Nota AI Commit：设置 Anthropic API Key`。默认使用官方地址 `https://api.anthropic.com/v1`，默认模型为 `claude-sonnet-5`。
+
+使用 Anthropic 格式的第三方服务时，将 `ai-commit.ANTHROPIC_BASE_URL` 设为包含 `/v1` 的 API 地址（例如 `https://example.com/v1`），并配置 `ai-commit.ANTHROPIC_MODEL`。扩展会自动追加 `/messages`，按 [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages/create) 格式发送请求。
 
 ---
 

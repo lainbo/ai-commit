@@ -15,12 +15,16 @@ export const ConfigKeys = {
   GEMINI_BASE_URL: 'GEMINI_BASE_URL',
   GEMINI_MODEL: 'GEMINI_MODEL',
   GEMINI_TEMPERATURE: 'GEMINI_TEMPERATURE',
+  ANTHROPIC_BASE_URL: 'ANTHROPIC_BASE_URL',
+  ANTHROPIC_MODEL: 'ANTHROPIC_MODEL',
+  ANTHROPIC_MAX_TOKENS: 'ANTHROPIC_MAX_TOKENS',
   AI_PROVIDER: 'AI_PROVIDER'
 } as const;
 
 const SecretKeys = {
   OPENAI_API_KEY: 'ai-commit.openai-api-key',
-  GEMINI_API_KEY: 'ai-commit.gemini-api-key'
+  GEMINI_API_KEY: 'ai-commit.gemini-api-key',
+  ANTHROPIC_API_KEY: 'ai-commit.anthropic-api-key'
 } as const;
 
 export const MODELS_STATE_KEY = 'availableOpenAIModels';
@@ -63,6 +67,10 @@ export function getGeminiApiKey(): Thenable<string | undefined> {
   return getExtensionContext().secrets.get(SecretKeys.GEMINI_API_KEY);
 }
 
+export function getAnthropicApiKey(): Thenable<string | undefined> {
+  return getExtensionContext().secrets.get(SecretKeys.ANTHROPIC_API_KEY);
+}
+
 export async function setOpenAIApiKey(value: string): Promise<void> {
   await getExtensionContext().secrets.store(SecretKeys.OPENAI_API_KEY, value);
   await clearLegacySetting('OPENAI_API_KEY');
@@ -74,6 +82,10 @@ export async function setGeminiApiKey(value: string): Promise<void> {
   await clearLegacySetting('GEMINI_API_KEY');
 }
 
+export async function setAnthropicApiKey(value: string): Promise<void> {
+  await getExtensionContext().secrets.store(SecretKeys.ANTHROPIC_API_KEY, value);
+}
+
 export async function deleteOpenAIApiKey(): Promise<void> {
   await getExtensionContext().secrets.delete(SecretKeys.OPENAI_API_KEY);
   await clearLegacySetting('OPENAI_API_KEY');
@@ -82,6 +94,10 @@ export async function deleteOpenAIApiKey(): Promise<void> {
 export async function deleteGeminiApiKey(): Promise<void> {
   await getExtensionContext().secrets.delete(SecretKeys.GEMINI_API_KEY);
   await clearLegacySetting('GEMINI_API_KEY');
+}
+
+export async function deleteAnthropicApiKey(): Promise<void> {
+  await getExtensionContext().secrets.delete(SecretKeys.ANTHROPIC_API_KEY);
 }
 
 export async function migrateLegacyApiKeys(): Promise<string[]> {

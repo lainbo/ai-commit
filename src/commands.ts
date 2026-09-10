@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import {
   ConfigKeys,
+  deleteAnthropicApiKey,
   deleteGeminiApiKey,
   deleteOpenAIApiKey,
   getConfig,
+  setAnthropicApiKey,
   setGeminiApiKey,
   setOpenAIApiKey
 } from './config';
@@ -16,9 +18,9 @@ export function registerCommands(context: vscode.ExtensionContext): void {
 
   register(context, 'ai-commit.showAvailableModels', async () => {
     const aiProvider = getConfig(ConfigKeys.AI_PROVIDER, 'openai');
-    if (aiProvider === 'gemini') {
+    if (aiProvider !== 'openai') {
       await vscode.window.showInformationMessage(
-        'This command only lists OpenAI-compatible models. Set Gemini models in ai-commit.GEMINI_MODEL.'
+        'This command only lists OpenAI-compatible models. Set Gemini models in ai-commit.GEMINI_MODEL and Anthropic models in ai-commit.ANTHROPIC_MODEL.'
       );
       return;
     }
@@ -53,6 +55,15 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     await vscode.window.showInformationMessage('Gemini API Key saved securely.');
   });
 
+  register(context, 'ai-commit.setAnthropicApiKey', async () => {
+    const apiKey = await promptForApiKey('Anthropic');
+    if (!apiKey) {
+      return;
+    }
+    await setAnthropicApiKey(apiKey);
+    await vscode.window.showInformationMessage('Anthropic API Key saved securely.');
+  });
+
   register(context, 'ai-commit.clearOpenAIApiKey', async () => {
     if (!(await confirmClearApiKey('OpenAI'))) {
       return;
@@ -67,6 +78,14 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     }
     await deleteGeminiApiKey();
     await vscode.window.showInformationMessage('Gemini API Key cleared.');
+  });
+
+  register(context, 'ai-commit.clearAnthropicApiKey', async () => {
+    if (!(await confirmClearApiKey('Anthropic'))) {
+      return;
+    }
+    await deleteAnthropicApiKey();
+    await vscode.window.showInformationMessage('Anthropic API Key cleared.');
   });
 }
 
@@ -115,10 +134,13 @@ function register(
           }
           if (result === 'Set API Key') {
             const provider = getConfig(ConfigKeys.AI_PROVIDER, 'openai');
+            const apiKeyCommands: Record<string, string> = {
+              openai: 'ai-commit.setOpenAIApiKey',
+              gemini: 'ai-commit.setGeminiApiKey',
+              anthropic: 'ai-commit.setAnthropicApiKey'
+            };
             await vscode.commands.executeCommand(
-              provider === 'gemini'
-                ? 'ai-commit.setGeminiApiKey'
-                : 'ai-commit.setOpenAIApiKey'
+              apiKeyCommands[provider] ?? apiKeyCommands.openai
             );
           }
           if (result === 'Configure') {

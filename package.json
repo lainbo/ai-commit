@@ -1,16 +1,18 @@
 {
   "name": "nota-ai-commit-lainbo",
   "displayName": "Nota AI Commit",
-  "version": "0.1.21",
-  "description": "Use Azure/OpenAI/Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
+  "version": "0.1.22",
+  "description": "Use Azure/OpenAI/Gemini/Anthropic API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
   "categories": [
     "Other"
   ],
   "keywords": [
     "AI Commit",
+    "Anthropic",
     "Auto Commit",
     "Azure",
     "ChatGPT",
+    "Claude",
     "Commit Message",
     "Commit Message Generator",
     "Commitizen",
@@ -65,12 +67,20 @@
         "title": "%aiCommit.command.setGeminiApiKey.title%"
       },
       {
+        "command": "ai-commit.setAnthropicApiKey",
+        "title": "%aiCommit.command.setAnthropicApiKey.title%"
+      },
+      {
         "command": "ai-commit.clearOpenAIApiKey",
         "title": "%aiCommit.command.clearOpenAIApiKey.title%"
       },
       {
         "command": "ai-commit.clearGeminiApiKey",
         "title": "%aiCommit.command.clearGeminiApiKey.title%"
+      },
+      {
+        "command": "ai-commit.clearAnthropicApiKey",
+        "title": "%aiCommit.command.clearAnthropicApiKey.title%"
       }
     ],
     "submenus": [
@@ -89,7 +99,8 @@
             "description": "%aiCommit.config.aiProvider.description%",
             "enum": [
               "openai",
-              "gemini"
+              "gemini",
+              "anthropic"
             ]
           },
           "ai-commit.DIFF_SOURCE": {
@@ -247,6 +258,27 @@
             "description": "%aiCommit.config.geminiTemperature.description%"
           }
         }
+      },
+      {
+        "title": "%aiCommit.configuration.anthropic.title%",
+        "properties": {
+          "ai-commit.ANTHROPIC_BASE_URL": {
+            "type": "string",
+            "default": "https://api.anthropic.com/v1",
+            "markdownDescription": "%aiCommit.config.anthropicBaseUrl.description%"
+          },
+          "ai-commit.ANTHROPIC_MODEL": {
+            "type": "string",
+            "default": "claude-sonnet-5",
+            "description": "%aiCommit.config.anthropicModel.description%"
+          },
+          "ai-commit.ANTHROPIC_MAX_TOKENS": {
+            "type": "integer",
+            "default": 4096,
+            "minimum": 1,
+            "description": "%aiCommit.config.anthropicMaxTokens.description%"
+          }
+        }
       }
     ],
     "menus": {
@@ -265,6 +297,10 @@
         {
           "command": "ai-commit.setGeminiApiKey",
           "group": "1_set@2"
+        },
+        {
+          "command": "ai-commit.setAnthropicApiKey",
+          "group": "1_set@3"
         }
       ],
       "scm/title": [
